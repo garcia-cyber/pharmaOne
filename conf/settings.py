@@ -126,3 +126,15 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# 
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+# --- AUTHENTIFICATION --- 
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/login/' 
