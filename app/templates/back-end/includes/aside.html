@@ -1,41 +1,398 @@
+{% load static %}
+
 <aside id="sidebar-wrapper">
-          <div class="sidebar-brand">
-            <a href="index.html"> <img alt="image" src="assets/img/logo.png" class="header-logo" /> <span
-                class="logo-name">Otika</span>
+
+  <!-- Logo et identité de la pharmacie -->
+  <div class="sidebar-brand">
+    <a href="{% url 'dashboard' %}" class="pharma-brand-link">
+
+      {% comment %} <div class="pharma-logo-box">
+        <img
+          src="{% static 'back-end/assets/img/logo.png' %}"
+          alt="Logo Pharma"
+          class="header-logo"
+        >
+      </div> {% endcomment %}
+
+      <div class="pharma-brand-text">
+        <span class="logo-name">Pharma</span>
+        <small>Gestion pharmaceutique</small>
+      </div>
+
+    </a>
+  </div>
+
+  <!-- Informations pharmacie connectée -->
+  <div class="pharmacie-sidebar-info">
+    <div class="pharmacie-sidebar-icon">
+      <i data-feather="plus-circle"></i>
+    </div>
+
+    {% comment %} <div class="pharmacie-sidebar-text">
+      <span class="pharmacie-sidebar-label">PHARMACIE ACTIVE</span>
+      <span class="pharmacie-sidebar-name">
+        {{ name_phar|default:"Ma pharmacie" }}
+      </span>
+    </div> {% endcomment %}
+  </div>
+
+  <ul class="sidebar-menu">
+
+    <!-- Menu principal -->
+    <li class="menu-header">PRINCIPAL</li>
+
+    <li class="dropdown active">
+      <a href="{% url 'dashboard' %}" class="nav-link">
+        <i data-feather="grid"></i>
+        <span>Tableau de bord</span>
+      </a>
+    </li>
+
+    <!-- Menu super administrateur -->
+    {% if 'super admin' in primary_role %}
+      <li class="menu-header">ADMINISTRATION</li>
+
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="shield"></i>
+          <span>Administration</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="users"></i>
+              Utilisateurs
             </a>
-          </div>
-          <ul class="sidebar-menu">
-            <li class="menu-header">Main</li>
-            <li class="dropdown active">
-              <a href="index.html" class="nav-link"><i data-feather="monitor"></i><span>Dashboard</span></a>
-            </li>
-            <li class="dropdown">
-              <a href="#" class="menu-toggle nav-link has-dropdown"><i
-                  data-feather="briefcase"></i><span>Widgets</span></a>
-              <ul class="dropdown-menu">
-                <li><a class="nav-link" href="widget-chart.html">Chart Widgets</a></li>
-                <li><a class="nav-link" href="widget-data.html">Data Widgets</a></li>
-              </ul>
-            </li>
-            
-    
-            <li class="menu-header">Media</li>
-           
-            
-            
-            
-            <li class="dropdown">
-              <a href="#" class="menu-toggle nav-link has-dropdown"><i
-                  data-feather="user-check"></i><span>Auth</span></a>
-              <ul class="dropdown-menu">
-                <li><a href="auth-login.html">Login</a></li>
-                <li><a href="auth-register.html">Register</a></li>
-                <li><a href="auth-forgot-password.html">Forgot Password</a></li>
-                <li><a href="auth-reset-password.html">Reset Password</a></li>
-                <li><a href="subscribe.html">Subscribe</a></li>
-              </ul>
-            </li>
-            
-          
-          </ul>
-        </aside>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="lock"></i>
+              Rôles et permissions
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="settings"></i>
+              Paramètres pharmacie
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="activity"></i>
+              Journal d'activité
+            </a>
+          </li>
+        </ul>
+      </li>
+    {% endif %}
+
+    <!-- Menu gestionnaire / administrateur de pharmacie -->
+    {% if 'admin' in primary_role %}
+      <li class="menu-header">GESTION PHARMACIE</li>
+
+      <!-- Paramétrage -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="settings"></i>
+          <span>Paramétrage</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="{% url 'creer_taux_change' %}">
+              <i data-feather="repeat"></i>
+              Taux de change
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="sliders"></i>
+              Prix et marges
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="layers"></i>
+              Catégories
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Catalogue des médicaments -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="package"></i>
+          <span>Médicaments</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="list"></i>
+              Liste des médicaments
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="plus-square"></i>
+              Ajouter un médicament
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="tag"></i>
+              Catégories
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Approvisionnement / achats -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="shopping-cart"></i>
+          <span>Approvisionnement</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="file-plus"></i>
+              Nouvel achat
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="truck"></i>
+              Fournisseurs
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="archive"></i>
+              Historique des achats
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Gestion du stock -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="database"></i>
+          <span>Stock</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="box"></i>
+              État du stock
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="alert-triangle"></i>
+              Stock faible
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="clock"></i>
+              Péremptions
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="shuffle"></i>
+              Mouvements de stock
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Ventes -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="shopping-bag"></i>
+          <span>Ventes</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="plus-circle"></i>
+              Nouvelle vente
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="file-text"></i>
+              Liste des ventes
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="credit-card"></i>
+              Paiements
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="rotate-ccw"></i>
+              Retours et annulations
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Finance -->
+      <li class="dropdown">
+        <a href="#" class="menu-toggle nav-link has-dropdown">
+          <i data-feather="dollar-sign"></i>
+          <span>Finance</span>
+        </a>
+
+        <ul class="dropdown-menu">
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="trending-up"></i>
+              Bénéfices
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="trending-down"></i>
+              Pertes
+            </a>
+          </li>
+
+          <li>
+            <a class="nav-link" href="#">
+              <i data-feather="bar-chart-2"></i>
+              Rapports financiers
+            </a>
+          </li>
+        </ul>
+      </li>
+    {% endif %}
+
+    <!-- Partie médicale / ordonnances -->
+    <li class="menu-header">SERVICE PHARMACEUTIQUE</li>
+
+    <li class="dropdown">
+      <a href="#" class="menu-toggle nav-link has-dropdown">
+        <i data-feather="file-text"></i>
+        <span>Ordonnances</span>
+      </a>
+
+      <ul class="dropdown-menu">
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="inbox"></i>
+            Ordonnances reçues
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="check-circle"></i>
+            Ordonnances servies
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="clock"></i>
+            En attente
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Rapports -->
+    <li class="menu-header">RAPPORTS</li>
+
+    <li class="dropdown">
+      <a href="#" class="menu-toggle nav-link has-dropdown">
+        <i data-feather="bar-chart-2"></i>
+        <span>Rapports</span>
+      </a>
+
+      <ul class="dropdown-menu">
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="calendar"></i>
+            Rapport journalier
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="calendar"></i>
+            Rapport mensuel
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="printer"></i>
+            Impressions
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Compte utilisateur -->
+    <li class="menu-header">COMPTE</li>
+
+    <li class="dropdown">
+      <a href="#" class="menu-toggle nav-link has-dropdown">
+        <i data-feather="user"></i>
+        <span>Mon compte</span>
+      </a>
+
+      <ul class="dropdown-menu">
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="user-check"></i>
+            Mon profil
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link" href="#">
+            <i data-feather="key"></i>
+            Mot de passe
+          </a>
+        </li>
+
+        <li>
+          <a class="nav-link text-danger" href="#">
+            <i data-feather="log-out"></i>
+            Déconnexion
+          </a>
+        </li>
+      </ul>
+    </li>
+
+  </ul>
+</aside>

@@ -1,0 +1,485 @@
+<style>
+  :root {
+    /* Identité pharmacie / santé */
+    --pharma-primary: #0f766e;
+    --pharma-primary-dark: #115e59;
+    --pharma-primary-light: #ccfbf1;
+
+    --pharma-blue: #2563eb;
+    --pharma-blue-light: #dbeafe;
+
+    --pharma-green: #16a34a;
+    --pharma-green-light: #dcfce7;
+
+    --pharma-orange: #d97706;
+    --pharma-orange-light: #fef3c7;
+
+    --pharma-red: #dc2626;
+    --pharma-red-light: #fee2e2;
+
+    /* Neutres */
+    --pharma-bg: #f1f5f9;
+    --pharma-card: #ffffff;
+    --pharma-text: #1e293b;
+    --pharma-muted: #64748b;
+    --pharma-border: #e2e8f0;
+
+    /* Sidebar */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #334155;
+    --sidebar-hover: #f0fdfa;
+    --sidebar-active: #ccfbf1;
+  }
+
+  body {
+    background: var(--pharma-bg);
+    color: var(--pharma-text);
+    font-size: 0.92rem;
+  }
+
+  /* Fond de navigation supérieur */
+  .navbar-bg {
+    background: #ffffff;
+    border-bottom: 1px solid var(--pharma-border);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Sidebar */
+  .main-sidebar.sidebar-style-2 {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--pharma-border);
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-brand {
+    border-bottom: 1px solid var(--pharma-border);
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    margin: 3px 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--sidebar-text);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li a:hover {
+    background: var(--sidebar-hover);
+    color: var(--pharma-primary-dark);
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li.active a {
+    background: var(--sidebar-active);
+    color: var(--pharma-primary-dark);
+    font-weight: 700;
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li.active a::before {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    height: 28px;
+    border-radius: 0 5px 5px 0;
+    background: var(--pharma-primary);
+    content: "";
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li a i {
+    width: 22px;
+    color: #64748b;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .main-sidebar.sidebar-style-2 .sidebar-menu li.active a i,
+  .main-sidebar.sidebar-style-2 .sidebar-menu li a:hover i {
+    color: var(--pharma-primary);
+  }
+
+  .menu-header {
+    padding: 18px 20px 7px !important;
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.9px;
+  }
+
+  /* Zone principale */
+  .main-content {
+    min-height: 100vh;
+    background: var(--pharma-bg);
+  }
+
+  .section {
+    padding: 22px 18px 0;
+  }
+
+  /* En-tête du dashboard */
+  .section-header {
+    display: flex;
+    align-items: center;
+    min-height: 74px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    border: 1px solid #bceee5;
+    border-radius: 14px;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(240, 253, 250, 0.97),
+        rgba(236, 253, 245, 0.97)
+      );
+    box-shadow: none;
+  }
+
+  .section-title-pharma {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--pharma-primary-dark);
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+
+  .section-title-pharma::before {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 39px;
+    border-radius: 11px;
+    background: var(--pharma-primary);
+    color: #ffffff;
+    content: "\f0fa";
+    font-family: "Font Awesome 5 Free";
+    font-size: 17px;
+    font-weight: 900;
+    box-shadow: 0 5px 10px rgba(15, 118, 110, 0.2);
+  }
+
+  /* Cartes générales */
+  .card {
+    overflow: hidden;
+    border: 1px solid var(--pharma-border);
+    border-radius: 13px;
+    background: var(--pharma-card);
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 9px 22px rgba(15, 23, 42, 0.08);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    padding: 15px 19px;
+    border-bottom: 1px solid #edf2f7;
+    background: #ffffff;
+  }
+
+  .card-header h4 {
+    margin: 0;
+    color: var(--pharma-text);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .card-body {
+    padding: 18px 19px;
+  }
+
+  /* Cartes de statistiques */
+  .card-statistic-4 {
+    position: relative;
+    min-height: 122px;
+    padding: 16px 17px;
+    border-left: 4px solid var(--pharma-primary);
+    background: #ffffff;
+  }
+
+  .card-statistic-4::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 88px;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(240, 253, 250, 0.8)
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  .card-statistic-4 h5 {
+    display: flex;
+    align-items: center;
+    margin: 0 0 8px;
+    color: var(--pharma-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+  }
+
+  .card-statistic-4 h2 {
+    margin-bottom: 5px;
+    color: var(--pharma-text);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .card-statistic-4 p {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    color: var(--pharma-muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Icône à gauche du titre */
+  .pharma-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    margin-right: 7px;
+    border-radius: 7px;
+    background: var(--pharma-primary-light);
+    color: var(--pharma-primary);
+    font-size: 12px;
+  }
+
+  /* Icône grande des cartes */
+  .banner-img {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 49px;
+    height: 49px;
+    border-radius: 14px;
+    background: var(--pharma-primary-light);
+  }
+
+  .banner-img i {
+    color: var(--pharma-primary) !important;
+    font-size: 21px !important;
+    opacity: 1;
+  }
+
+  /* Variantes par cartes, à utiliser selon l'ordre */
+  .row > div:nth-child(1) .card-statistic-4 {
+    border-left-color: var(--pharma-primary);
+  }
+
+  .row > div:nth-child(1) .banner-img {
+    background: var(--pharma-primary-light);
+  }
+
+  .row > div:nth-child(1) .banner-img i {
+    color: var(--pharma-primary) !important;
+  }
+
+  .row > div:nth-child(2) .card-statistic-4 {
+    border-left-color: var(--pharma-blue);
+  }
+
+  .row > div:nth-child(2) .banner-img {
+    background: var(--pharma-blue-light);
+  }
+
+  .row > div:nth-child(2) .banner-img i {
+    color: var(--pharma-blue) !important;
+  }
+
+  .row > div:nth-child(3) .card-statistic-4 {
+    border-left-color: var(--pharma-orange);
+  }
+
+  .row > div:nth-child(3) .banner-img {
+    background: var(--pharma-orange-light);
+  }
+
+  .row > div:nth-child(3) .banner-img i {
+    color: var(--pharma-orange) !important;
+  }
+
+  .row > div:nth-child(4) .card-statistic-4 {
+    border-left-color: var(--pharma-green);
+  }
+
+  .row > div:nth-child(4) .banner-img {
+    background: var(--pharma-green-light);
+  }
+
+  .row > div:nth-child(4) .banner-img i {
+    color: var(--pharma-green) !important;
+  }
+
+  /* Indicateurs */
+  .col-green {
+    color: var(--pharma-green) !important;
+    font-weight: 700;
+  }
+
+  .col-orange {
+    color: var(--pharma-orange) !important;
+    font-weight: 700;
+  }
+
+  .text-danger {
+    color: var(--pharma-red) !important;
+    font-weight: 700;
+  }
+
+  /* Boutons */
+  .btn-primary {
+    border-color: var(--pharma-primary);
+    background: var(--pharma-primary);
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  .btn-primary:hover,
+  .btn-primary:focus {
+    border-color: var(--pharma-primary-dark);
+    background: var(--pharma-primary-dark);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.22);
+  }
+
+  .btn-light {
+    border: 1px solid var(--pharma-border);
+    background: #ffffff;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .btn-light:hover {
+    border-color: #b7dcd4;
+    background: var(--pharma-light);
+    color: var(--pharma-primary-dark);
+  }
+
+  /* Résumé sous le graphique */
+  .list-inline-item {
+    min-width: 105px;
+  }
+
+  .list-inline-item h5 {
+    margin: 3px 0 0;
+    color: var(--pharma-text);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .list-inline-item p {
+    margin-top: 3px;
+    color: var(--pharma-muted);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Colonne des informations à droite du graphique */
+  .text-big {
+    color: var(--pharma-text);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  /* Footer */
+  .main-footer {
+    margin-top: 24px;
+    border-top: 1px solid var(--pharma-border);
+    background: #ffffff;
+    color: var(--pharma-muted);
+    font-size: 12px;
+  }
+
+  .main-footer a {
+    color: var(--pharma-primary);
+    font-weight: 700;
+  }
+
+  /* Tablette */
+  @media (max-width: 991px) {
+    .section {
+      padding: 18px 14px 0;
+    }
+
+    .card-statistic-4 {
+      min-height: 112px;
+    }
+
+    .section-header {
+      min-height: 67px;
+      padding: 14px 16px;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 576px) {
+    body {
+      font-size: 0.88rem;
+    }
+
+    .section {
+      padding: 14px 10px 0;
+    }
+
+    .section-header {
+      margin-bottom: 14px;
+      border-radius: 11px;
+    }
+
+    .section-title-pharma {
+      font-size: 17px;
+    }
+
+    .section-title-pharma::before {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      font-size: 14px;
+    }
+
+    .card-statistic-4 {
+      min-height: 104px;
+      padding: 14px;
+    }
+
+    .card-statistic-4 h2 {
+      font-size: 20px;
+    }
+
+    .banner-img {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+    }
+
+    .banner-img i {
+      font-size: 18px !important;
+    }
+
+    .card-header,
+    .card-body {
+      padding: 14px;
+    }
+  }
+</style>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>Taux de change | {{ name_phar }}</title>
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <!-- Font Awesome : retire cette ligne si déjà chargé dans app.min.css -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/all.min.css' %}">
+
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #126e5f;
+      --pharma-primary-dark: #0b4f43;
+      --pharma-secondary: #1da57a;
+      --pharma-light: #effaf6;
+      --pharma-border: #dbeee7;
+      --pharma-muted: #6c757d;
+      --pharma-warning-bg: #fff8e8;
+      --pharma-warning-border: #f4c965;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: #f4f7f6;
+    }
+
+    /* En-tête de la page */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary),
+        var(--pharma-secondary)
+      );
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(18, 110, 95, 0.18);
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .section-header p {
+      margin: 5px 0 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 14px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 21px;
+    }
+
+    /* Limite la largeur réelle du formulaire */
+    .taux-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .taux-card {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 8px 28px rgba(32, 58, 52, 0.08);
+    }
+
+    .taux-card .card-header {
+      padding: 17px 22px;
+      border-bottom: 1px solid #edf0ef;
+      background: #ffffff;
+    }
+
+    .taux-card .card-header h4 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .taux-card .card-body {
+      padding: 22px;
+    }
+
+    .pharmacie-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      margin-top: 9px;
+      border-radius: 30px;
+      background: var(--pharma-light);
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Aperçu du taux */
+    .taux-preview {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      margin-bottom: 22px;
+      border: 1px solid var(--pharma-border);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #effaf6, #f9fdfb);
+    }
+
+    .taux-preview::after {
+      content: "$";
+      position: absolute;
+      right: 18px;
+      bottom: -27px;
+      color: rgba(18, 110, 95, 0.08);
+      font-size: 125px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .taux-preview-label {
+      position: relative;
+      z-index: 1;
+      display: block;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .taux-preview-value {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--pharma-primary-dark);
+    }
+
+    .taux-preview-value .usd {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .taux-preview-value .equal {
+      color: var(--pharma-muted);
+      font-size: 18px;
+    }
+
+    .taux-preview-value .cdf {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .taux-preview-value small {
+      color: var(--pharma-secondary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* Formulaire */
+    .form-group label {
+      margin-bottom: 8px;
+      color: #37474f;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .form-control {
+      min-height: 47px;
+      border: 1px solid #d7e2df;
+      border-radius: 9px;
+      box-shadow: none;
+      font-size: 16px;
+    }
+
+    .form-control:focus {
+      border-color: var(--pharma-secondary);
+      box-shadow: 0 0 0 0.18rem rgba(29, 165, 122, 0.15);
+    }
+
+    .input-group-text {
+      border: 1px solid #d7e2df;
+      border-left: 0;
+      background: #f7fbfa;
+      color: var(--pharma-primary-dark);
+      font-weight: 700;
+    }
+
+    .info-taux {
+      display: flex;
+      gap: 13px;
+      padding: 15px;
+      margin-top: 20px;
+      border: 1px solid var(--pharma-warning-border);
+      border-radius: 10px;
+      background: var(--pharma-warning-bg);
+    }
+
+    .info-taux-icon {
+      color: #c28a0b;
+      font-size: 19px;
+    }
+
+    .info-taux h6 {
+      margin: 0 0 4px;
+      color: #8a6308;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .info-taux p {
+      margin: 0;
+      color: #6e5a22;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* Boutons */
+    .btn-pharmacie {
+      padding: 10px 19px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary),
+        var(--pharma-secondary)
+      );
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 5px 12px rgba(18, 110, 95, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .btn-pharmacie:hover,
+    .btn-pharmacie:focus {
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(18, 110, 95, 0.28);
+    }
+
+    .btn-retour {
+      padding: 9px 16px;
+      border: 1px solid #d6dfdc;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #546e7a;
+      font-weight: 600;
+    }
+
+    .btn-retour:hover {
+      border-color: var(--pharma-primary);
+      color: var(--pharma-primary);
+    }
+
+    /* Alertes et erreurs */
+    .alert {
+      border: 0;
+      border-radius: 9px;
+    }
+
+    .alert-success {
+      color: #0e5e46;
+      background: #dff6eb;
+    }
+
+    .alert-danger {
+      color: #a12929;
+      background: #fce7e7;
+    }
+
+    .field-error ul {
+      padding-left: 18px;
+      margin: 6px 0 0;
+    }
+
+    /* Grand écran : garde une carte petite et professionnelle */
+    @media (min-width: 1200px) {
+      .taux-container {
+        max-width: 580px;
+      }
+    }
+
+    /* Tablette : largeur modérée */
+    @media (min-width: 768px) and (max-width: 1199px) {
+      .taux-container {
+        max-width: 610px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 576px) {
+      .section-header {
+        padding: 18px;
+      }
+
+      .section-header h1 {
+        font-size: 19px;
+      }
+
+      .section-header-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 18px;
+      }
+
+      .taux-card .card-body {
+        padding: 20px 16px;
+      }
+
+      .taux-card .card-header {
+        padding: 16px;
+      }
+
+      .taux-preview {
+        padding: 17px;
+      }
+
+      .taux-preview-value .cdf {
+        font-size: 23px;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+      }
+
+      .action-buttons .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      {% include "back-end/includes/header.html" %}
+
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <div class="section-header">
+            <div>
+              <h1>Paramètres du taux de change</h1>
+              <p>Configurez le taux utilisé pour les prix de votre pharmacie.</p>
+            </div>
+
+            <div class="section-header-icon">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="row justify-content-center">
+
+              <!-- Colonne volontairement réduite sur ordinateur/tablette -->
+              <div class="col-xl-6 col-lg-7 col-md-9 col-sm-11">
+
+                <!-- Largeur maximum : 580px sur PC -->
+                <div class="taux-container">
+                  <div class="card taux-card">
+
+                    <div class="card-header">
+                      <div>
+                        <h4>
+                          <i class="fas fa-money-bill-wave text-success mr-2"></i>
+                          Taux USD vers Franc Congolais
+                        </h4>
+
+                        <span class="pharmacie-badge">
+                          <i class="fas fa-clinic-medical"></i>
+                          {{ name_phar }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="card-body">
+
+                      {% if msg %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                          <i class="fas fa-check-circle mr-2"></i>
+                          {{ msg }}
+
+                          <button
+                            type="button"
+                            class="close"
+                            data-dismiss="alert"
+                            aria-label="Fermer"
+                          >
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                      {% endif %}
+
+                      {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                          <i class="fas fa-exclamation-circle mr-2"></i>
+                          {{ form.non_field_errors }}
+                        </div>
+                      {% endif %}
+
+                      <div class="taux-preview">
+                        <span class="taux-preview-label">
+                          Taux actuellement saisi
+                        </span>
+
+                        <div class="taux-preview-value">
+                          <span class="usd">1 USD</span>
+                          <span class="equal">=</span>
+
+                          <span id="preview-taux" class="cdf">
+                            {% if form.taux_usd_cdf.value %}
+                              {{ form.taux_usd_cdf.value }}
+                            {% else %}
+                              0
+                            {% endif %}
+                          </span>
+
+                          <small>CDF</small>
+                        </div>
+                      </div>
+
+                      <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                          <label for="{{ form.taux_usd_cdf.id_for_label }}">
+                            <i class="fas fa-dollar-sign text-success mr-1"></i>
+                            {{ form.taux_usd_cdf.label }}
+                          </label>
+
+                          <div class="input-group">
+                            {{ form.taux_usd_cdf }}
+
+                            <div class="input-group-append">
+                              <span class="input-group-text">CDF</span>
+                            </div>
+                          </div>
+
+                          {% if form.taux_usd_cdf.help_text %}
+                            <small class="form-text text-muted mt-2">
+                              <i class="fas fa-info-circle mr-1"></i>
+                              {{ form.taux_usd_cdf.help_text }}
+                            </small>
+                          {% else %}
+                            <small class="form-text text-muted mt-2">
+                              Exemple : si 1 USD vaut 2 500 CDF, entrez 2500.
+                            </small>
+                          {% endif %}
+
+                          {% if form.taux_usd_cdf.errors %}
+                            <div class="text-danger field-error">
+                              <i class="fas fa-exclamation-triangle mr-1"></i>
+                              {{ form.taux_usd_cdf.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+
+                        <div class="info-taux">
+                          <div class="info-taux-icon">
+                            <i class="fas fa-info-circle"></i>
+                          </div>
+
+                          <div>
+                            <h6>Attention à la modification du taux</h6>
+                            <p>
+                              Ce taux est utilisé pour convertir les montants
+                              exprimés en USD vers le CDF. Il influence les
+                              prix de vente, les bénéfices et les rapports.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div class="action-buttons d-flex align-items-center justify-content-between mt-4">
+                          <a
+                            href="javascript:history.back()"
+                            class="btn btn-retour"
+                          >
+                            <i class="fas fa-arrow-left mr-1"></i>
+                            Retour
+                          </a>
+
+                          <button type="submit" class="btn btn-pharmacie">
+                            <i class="fas fa-save mr-1"></i>
+                            Enregistrer le taux
+                          </button>
+                        </div>
+                      </form>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          Système de gestion pharmaceutique &copy; {% now "Y" %}
+        </div>
+
+        <div class="footer-right">
+          <i class="fas fa-clinic-medical text-success"></i>
+          {{ name_phar }}
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const inputTaux = document.getElementById(
+        "{{ form.taux_usd_cdf.id_for_label }}"
+      );
+
+      const previewTaux = document.getElementById("preview-taux");
+
+      function formatCDF(valeur) {
+        if (!valeur) {
+          return "0";
+        }
+
+        const nombre = parseFloat(valeur);
+
+        if (isNaN(nombre)) {
+          return "0";
+        }
+
+        return nombre.toLocaleString("fr-FR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        });
+      }
+
+      if (inputTaux && previewTaux) {
+        previewTaux.textContent = formatCDF(inputTaux.value);
+
+        inputTaux.addEventListener("input", function () {
+          previewTaux.textContent = formatCDF(this.value);
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

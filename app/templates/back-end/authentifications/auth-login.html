@@ -1,222 +1,447 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport" />
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
   <title>Pharma | Connexion</title>
 
-  <!-- General CSS Files -->
-  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}" />
-  <link rel="stylesheet" href="{% static 'back-end/assets/bundles/bootstrap-social/bootstrap-social.css' %}" />
-  <!-- Template CSS -->
-  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}" />
-  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}" />
-  <!-- Custom style CSS -->
-  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}" />
-  <link rel="shortcut icon" type="image/x-icon" href="{% static 'back-end/assets/img/favicon.ico' %}" />
+  <!-- CSS du thème -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
 
   <style>
     :root {
-      --primary: #1e293b;
-      --primary-dark: #0f172a;
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-      --text-muted: #64748b;
-      --text-dark: #0f172a;
-      --border-color: #e2e8f0;
-      --input-bg: #f8fafc;
-      --danger: #ef4444;
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dbe5e3;
+      --pharma-input: #f8fafc;
+
+      --danger: #dc2626;
       --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
-      background: linear-gradient(
-          135deg,
-          rgba(0, 0, 0, 0.5),
-          rgba(0, 0, 0, 0.5),
-          rgba(0, 0, 0, 0.5)
-        ),
-        url("{% static 'back-end/gemini/gemini2.jpg' %}") center/cover no-repeat fixed;
+      position: relative;
       min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(7, 54, 49, 0.85),
+          rgba(15, 118, 110, 0.76),
+          rgba(30, 64, 175, 0.62)
+        ),
+        url("{% static 'back-end/gemini/gemini2.jpg' %}") center center / cover no-repeat fixed;
+      color: var(--pharma-text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* Motif médical transparent */
+    body::before {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 55vw;
+      height: 100vh;
+      background:
+        radial-gradient(
+          circle at 20% 20%,
+          rgba(255, 255, 255, 0.13) 0,
+          rgba(255, 255, 255, 0) 45%
+        ),
+        radial-gradient(
+          circle at 80% 80%,
+          rgba(255, 255, 255, 0.12) 0,
+          rgba(255, 255, 255, 0) 48%
+        );
+      content: "";
+      pointer-events: none;
+    }
+
+    .login-page {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 24px;
     }
 
     .login-wrapper {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 420px;
-      padding: 1.5rem;
+      max-width: 440px;
     }
 
     .login-card {
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: var(--card-shadow);
       overflow: hidden;
-      border: 1px solid rgba(30, 41, 59, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 0 25px 55px rgba(4, 33, 30, 0.38);
     }
 
+    /* Entête */
     .login-header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      padding: 2rem 1.5rem 1.5rem;
-      text-align: center;
-      color: #ffffff;
       position: relative;
+      overflow: hidden;
+      padding: 28px 28px 24px;
+      background:
+        linear-gradient(
+          135deg,
+          var(--pharma-primary-dark),
+          var(--pharma-primary)
+        );
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .login-header::before {
+      position: absolute;
+      top: -70px;
+      right: -50px;
+      width: 180px;
+      height: 180px;
+      border: 30px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .login-header::after {
+      position: absolute;
+      bottom: -90px;
+      left: -50px;
+      width: 190px;
+      height: 190px;
+      border: 35px solid rgba(255, 255, 255, 0.06);
+      border-radius: 50%;
+      content: "";
     }
 
     .login-logo {
-      width: 64px;
-      height: 64px;
-      background: #ffffff;
-      border-radius: 12px;
+      position: relative;
+      z-index: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+      width: 65px;
+      height: 65px;
+      margin-bottom: 13px;
+      border: 4px solid rgba(255, 255, 255, 0.22);
+      border-radius: 17px;
+      background: #ffffff;
+      box-shadow: 0 8px 17px rgba(0, 0, 0, 0.16);
     }
 
     .login-logo svg {
-      width: 36px;
-      height: 36px;
-      color: var(--primary);
+      width: 37px;
+      height: 37px;
+      color: var(--pharma-primary);
     }
 
-    .login-header h4 {
+    .login-header h1 {
+      position: relative;
+      z-index: 1;
       margin: 0;
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.025em;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
     }
 
     .login-header p {
-      margin: 0.5rem 0 0;
-      font-size: 0.875rem;
-      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+      margin: 6px 0 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 13px;
     }
 
-    .alert-danger {
-      margin: 1rem 0 0;
-      padding: 0.75rem 1rem;
-      background: var(--danger-bg);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      color: var(--danger);
-      font-size: 0.85rem;
-      font-weight: 500;
-      text-align: left;
-    }
-
+    /* Partie formulaire */
     .login-body {
-      padding: 2rem 1.5rem;
+      padding: 28px;
+      background: #ffffff;
     }
 
+    .login-welcome {
+      margin-bottom: 23px;
+    }
+
+    .login-welcome h2 {
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .login-welcome p {
+      margin: 5px 0 0;
+      color: var(--pharma-muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Alertes */
+    .login-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 12px;
+      border: 1px solid var(--danger-border);
+      border-radius: 10px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .login-alert-icon {
+      flex: 0 0 auto;
+      margin-top: 1px;
+      font-size: 16px;
+    }
+
+    .login-alert ul {
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    /* Champs */
     .form-group {
-      margin-bottom: 1.25rem;
+      margin-bottom: 18px;
     }
 
     .form-group label {
       display: block;
-      margin-bottom: 0.625rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      font-size: 0.875rem;
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .form-label-icon {
+      margin-right: 5px;
+      color: var(--pharma-primary);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      z-index: 2;
+      color: #94a3b8;
+      font-size: 15px;
+      transform: translateY(-50%);
     }
 
     .form-control {
       width: 100%;
-      padding: 0.875rem 1rem;
-      border: 1.5px solid var(--border-color);
+      height: 48px;
+      padding: 11px 42px 11px 42px;
+      border: 1px solid var(--pharma-border);
       border-radius: 10px;
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
-      background: var(--input-bg);
-      color: var(--text-dark);
+      outline: none;
+      background: var(--pharma-input);
+      color: var(--pharma-text);
+      font-size: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
     .form-control:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.12);
+      border-color: var(--pharma-primary);
       background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.13);
     }
 
     .form-control::placeholder {
       color: #94a3b8;
     }
 
+    .form-control.is-invalid {
+      border-color: var(--danger);
+      background: #fffafa;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .field-error ul {
+      padding-left: 17px;
+      margin: 0;
+    }
+
+    /* Bouton afficher/masquer mot de passe */
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      z-index: 3;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      outline: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      transform: translateY(-50%);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .toggle-password:hover {
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+    }
+
+    /* Options */
     .form-options {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.25rem;
-      font-size: 0.85rem;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 2px 0 22px;
     }
 
     .custom-checkbox {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      color: var(--text-muted);
+      gap: 7px;
+      margin: 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
     }
 
     .custom-checkbox input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--pharma-primary);
       cursor: pointer;
-      accent-color: var(--primary);
     }
 
     .forgot-link {
-      color: var(--primary);
+      color: var(--pharma-primary);
+      font-size: 12px;
+      font-weight: 700;
       text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s ease;
+      white-space: nowrap;
     }
 
     .forgot-link:hover {
-      color: var(--primary-dark);
+      color: var(--pharma-primary-dark);
       text-decoration: underline;
     }
 
+    /* Bouton de connexion */
     .btn-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       width: 100%;
-      padding: 0.95rem;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border: none;
+      min-height: 48px;
+      padding: 11px 18px;
+      border: 0;
       border-radius: 10px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
       color: #ffffff;
-      font-weight: 700;
-      font-size: 1rem;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
-      transition: all 0.25s ease;
-      box-shadow: 0 6px 14px -3px rgba(30, 41, 59, 0.35);
-      letter-spacing: 0.01em;
+      box-shadow: 0 7px 14px rgba(15, 118, 110, 0.24);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px -5px rgba(30, 41, 59, 0.45);
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 19px rgba(15, 118, 110, 0.31);
     }
 
     .btn-login:active {
       transform: translateY(0);
     }
 
+    .login-footer {
+      margin-top: 20px;
+      color: #94a3b8;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .login-footer i {
+      margin-right: 4px;
+      color: var(--pharma-primary);
+    }
+
     @media (max-width: 480px) {
-      .login-wrapper {
-        padding: 1rem;
+      .login-page {
+        padding: 16px;
+      }
+
+      .login-card {
+        border-radius: 16px;
       }
 
       .login-header {
-        padding: 1.5rem 1rem 1rem;
+        padding: 24px 18px 20px;
       }
 
       .login-body {
-        padding: 1.5rem 1rem;
+        padding: 23px 18px;
+      }
+
+      .form-options {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .forgot-link {
+        margin-left: 23px;
       }
     }
   </style>
@@ -225,50 +450,162 @@
 <body>
   <div class="loader"></div>
 
-  <div class="login-wrapper">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 3v18" />
-          </svg>
-        </div>
-        <h4>Pharma</h4>
-        <p>Connectez-vous à votre espace</p>
+  <main class="login-page">
+    <div class="login-wrapper">
 
-        {% if msg %}
-          <div class="alert alert-danger">{{ msg }}</div>
-        {% endif %}
-      </div>
+      <section class="login-card">
+        <header class="login-header">
 
-      <div class="login-body">
-        <form method="POST" action="" class="needs-validation" novalidate>
-          {% csrf_token %}
+          <div class="login-logo" aria-hidden="true">
+            <!-- Croix médicale -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 5v14M5 12h14"
+              />
+            </svg>
+          </div>
 
-          {{ form.as_p }}
+          <h1>Pharma ERP</h1>
+          <p>Gestion sécurisée de votre pharmacie</p>
+        </header>
 
-          <div class="form-options">
-            <div class="custom-checkbox">
-              <input type="checkbox" name="remember" class="custom-control-input" tabindex="3" id="remember-me" />
-              <label class="custom-control-label" for="remember-me">Se souvenir de moi</label>
+        <div class="login-body">
+
+          <div class="login-welcome">
+            <h2>Bienvenue</h2>
+            <p>
+              Entrez vos identifiants pour accéder à votre espace de travail.
+            </p>
+          </div>
+
+          {% if msg %}
+            <div class="login-alert" role="alert">
+              <span class="login-alert-icon">⚠</span>
+              <span>{{ msg }}</span>
             </div>
-          </div>
+          {% endif %}
 
-          <div class="form-group">
-            <button type="submit" class="btn-login" tabindex="4">
-              Se connecter
+          {% if form.non_field_errors %}
+            <div class="login-alert" role="alert">
+              <span class="login-alert-icon">⚠</span>
+              <span>{{ form.non_field_errors }}</span>
+            </div>
+          {% endif %}
+
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+              <label for="{{ form.username.id_for_label }}">
+                <span class="form-label-icon">●</span>
+                Nom d'utilisateur
+              </label>
+
+              <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+
+                {{ form.username }}
+              </div>
+
+              {% if form.username.errors %}
+                <div class="field-error">
+                  {{ form.username.errors }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.password.id_for_label }}">
+                <span class="form-label-icon">●</span>
+                Mot de passe
+              </label>
+
+              <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+
+                {{ form.password }}
+
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="toggle-password"
+                  aria-label="Afficher ou masquer le mot de passe"
+                >
+                  👁
+                </button>
+              </div>
+
+              {% if form.password.errors %}
+                <div class="field-error">
+                  {{ form.password.errors }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="form-options">
+              <label class="custom-checkbox" for="remember-me">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  id="remember-me"
+                  value="1"
+                >
+                <span>Se souvenir de moi</span>
+              </label>
+
+              
+              <a href="#" class="forgot-link">
+                Mot de passe oublié ?
+              </a>
+            </div>
+
+            <button type="submit" class="btn-login">
+              <span>Se connecter</span>
+              <span aria-hidden="true">→</span>
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+          </form>
 
-  <!-- General JS Scripts -->
+          <div class="login-footer">
+            <i>+</i>
+            Accès réservé au personnel autorisé
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- JavaScript -->
   <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
-  <!-- Page Specific JS File -->
   <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
-  <!-- Custom JS File -->
   <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const passwordInput = document.getElementById(
+        "{{ form.password.id_for_label }}"
+      );
+
+      const toggleButton = document.getElementById("toggle-password");
+
+      if (passwordInput && toggleButton) {
+        toggleButton.addEventListener("click", function () {
+          const isPassword = passwordInput.type === "password";
+
+          passwordInput.type = isPassword ? "text" : "password";
+          toggleButton.textContent = isPassword ? "🙈" : "👁";
+        });
+      }
+    });
+  </script>
 </body>
+
 </html>
