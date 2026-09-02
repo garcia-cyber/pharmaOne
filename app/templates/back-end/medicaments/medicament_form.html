@@ -1,0 +1,1082 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>
+    {% if medicament %}
+      Modifier {{ medicament.nom }} | {{ name_phar }}
+    {% else %}
+      Ajouter un médicament | {{ name_phar }}
+    {% endif %}
+  </title>
+
+  <!-- CSS général -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* Entête de la page */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+      box-shadow: none;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 43px;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Carte principale */
+    .medicament-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .medicament-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .medicament-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 21px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .medicament-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .medicament-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .required-info {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .required-star {
+      color: var(--pharma-red);
+      font-weight: 800;
+    }
+
+    .medicament-card-body {
+      padding: 22px;
+    }
+
+    /* Alertes */
+    .pharma-alert-success {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 13px 15px;
+      border: 1px solid #b7edcb;
+      border-radius: 10px;
+      background: var(--pharma-green-light);
+      color: #166534;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pharma-alert-success i {
+      margin-top: 1px;
+      color: var(--pharma-green);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 13px 15px;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pharma-alert-danger i {
+      margin-top: 1px;
+      color: var(--pharma-red);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger ul {
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    /* Sections */
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      text-transform: uppercase;
+    }
+
+    .form-section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 13px;
+    }
+
+    /* Champs formulaire */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .form-control,
+    .custom-select,
+    select,
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfdfd;
+      color: var(--pharma-text);
+      font-size: 13px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .form-control:focus,
+    .custom-select:focus,
+    select:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--pharma-primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .form-control::placeholder {
+      color: #94a3b8;
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--pharma-red);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .field-error ul {
+      padding-left: 17px;
+      margin: 0;
+    }
+
+    /* Zone de résumé des prix */
+    .price-info-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 13px;
+      border: 1px solid #ccece4;
+      border-radius: 9px;
+      background: #f4fffc;
+    }
+
+    .price-info-box i {
+      margin-top: 2px;
+      color: var(--pharma-primary);
+      font-size: 17px;
+    }
+
+    .price-info-box h6 {
+      margin: 0 0 4px;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .price-info-box p {
+      margin: 0;
+      color: #52716a;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .prix-calcul {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Actions */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-retour {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border: 1px solid #d6e0de;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-retour:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-save-medicament {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 190px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-save-medicament:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 17px rgba(15, 118, 110, 0.28);
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .medicament-container {
+        max-width: 760px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name,
+      .required-info {
+        display: none;
+      }
+
+      .medicament-card-header {
+        align-items: flex-start;
+        padding: 15px;
+      }
+
+      .medicament-card-body {
+        padding: 16px;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-retour,
+      .btn-save-medicament {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      {% include "back-end/includes/header.html" %}
+
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- Entête dynamique -->
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                {% if medicament %}
+                  <i class="fas fa-edit"></i>
+                {% else %}
+                  <i class="fas fa-pills"></i>
+                {% endif %}
+              </div>
+
+              <div>
+                {% if medicament %}
+                  <h1>Modifier un médicament</h1>
+                  <p>
+                    Modifiez les informations de
+                    <strong>{{ medicament.nom }}</strong>.
+                  </p>
+                {% else %}
+                  <h1>Ajouter un médicament</h1>
+                  <p>
+                    Enregistrez un produit dans le catalogue de la pharmacie.
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="medicament-container">
+
+              <div class="medicament-card">
+
+                <div class="medicament-card-header">
+                  <h4>
+                    {% if medicament %}
+                      <i class="fas fa-pen"></i>
+                      Modification : {{ medicament.nom }}
+                    {% else %}
+                      <i class="fas fa-capsules"></i>
+                      Informations du médicament
+                    {% endif %}
+                  </h4>
+
+                  <span class="required-info">
+                    <span class="required-star">*</span>
+                    Champs obligatoires
+                  </span>
+                </div>
+
+                <div class="medicament-card-body">
+
+                  {% if msg %}
+                    <div class="pharma-alert-success" role="alert">
+                      <i class="fas fa-check-circle"></i>
+                      <span>{{ msg }}</span>
+                    </div>
+                  {% endif %}
+
+                  {% if form.non_field_errors %}
+                    <div class="pharma-alert-danger" role="alert">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <div>{{ form.non_field_errors }}</div>
+                    </div>
+                  {% endif %}
+
+                  <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Champs cachés éventuels -->
+                    {% for hidden_field in form.hidden_fields %}
+                      {{ hidden_field }}
+                    {% endfor %}
+
+                    <!-- Identification -->
+                    <div class="form-section-title">
+                      <i class="fas fa-info-circle"></i>
+                      Identification du produit
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.nom.id_for_label }}">
+                            Nom du médicament
+                            {% if form.nom.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.nom }}
+
+                          {% if form.nom.help_text %}
+                            <small class="field-help">
+                              {{ form.nom.help_text }}
+                            </small>
+                          {% endif %}
+
+                          {% if form.nom.errors %}
+                            <div class="field-error">
+                              {{ form.nom.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.categorie.id_for_label }}">
+                            Catégorie
+                            {% if form.categorie.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.categorie }}
+
+                          {% if form.categorie.errors %}
+                            <div class="field-error">
+                              {{ form.categorie.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.forme.id_for_label }}">
+                            Forme pharmaceutique
+                            {% if form.forme.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.forme }}
+
+                          {% if form.forme.errors %}
+                            <div class="field-error">
+                              {{ form.forme.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.dosage.id_for_label }}">
+                            Dosage / concentration
+                            {% if form.dosage.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.dosage }}
+
+                          {% if form.dosage.help_text %}
+                            <small class="field-help">
+                              {{ form.dosage.help_text }}
+                            </small>
+                          {% else %}
+                            <small class="field-help">
+                              Exemple : 500 mg, 250 mg/5 ml, 1 g.
+                            </small>
+                          {% endif %}
+
+                          {% if form.dosage.errors %}
+                            <div class="field-error">
+                              {{ form.dosage.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-12">
+                        <div class="form-group">
+                          <label for="{{ form.fabricant.id_for_label }}">
+                            Fabricant / laboratoire
+                            {% if form.fabricant.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.fabricant }}
+
+                          {% if form.fabricant.errors %}
+                            <div class="field-error">
+                              {{ form.fabricant.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-12">
+                        <div class="form-group">
+                          <label for="{{ form.description.id_for_label }}">
+                            Description
+                            {% if form.description.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.description }}
+
+                          <small class="field-help">
+                            Information complémentaire sur le médicament :
+                            indication, détails de présentation ou remarque.
+                          </small>
+
+                          {% if form.description.errors %}
+                            <div class="field-error">
+                              {{ form.description.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- Prix et conditionnement -->
+                    <div class="form-section-title mt-2">
+                      <i class="fas fa-box-open"></i>
+                      Conditionnement et tarification
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="{{ form.devise.id_for_label }}">
+                            Devise
+                            {% if form.devise.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.devise }}
+
+                          {% if form.devise.help_text %}
+                            <small class="field-help">
+                              {{ form.devise.help_text }}
+                            </small>
+                          {% endif %}
+
+                          {% if form.devise.errors %}
+                            <div class="field-error">
+                              {{ form.devise.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="{{ form.quantite_par_carton.id_for_label }}">
+                            Quantité par carton
+                            {% if form.quantite_par_carton.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.quantite_par_carton }}
+
+                          {% if form.quantite_par_carton.help_text %}
+                            <small class="field-help">
+                              {{ form.quantite_par_carton.help_text }}
+                            </small>
+                          {% else %}
+                            <small class="field-help">
+                              Nombre de pièces dans un carton.
+                            </small>
+                          {% endif %}
+
+                          {% if form.quantite_par_carton.errors %}
+                            <div class="field-error">
+                              {{ form.quantite_par_carton.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="{{ form.prix_vente_piece.id_for_label }}">
+                            Prix de vente / pièce
+                            {% if form.prix_vente_piece.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.prix_vente_piece }}
+
+                          {% if form.prix_vente_piece.help_text %}
+                            <small class="field-help">
+                              {{ form.prix_vente_piece.help_text }}
+                            </small>
+                          {% endif %}
+
+                          {% if form.prix_vente_piece.errors %}
+                            <div class="field-error">
+                              {{ form.prix_vente_piece.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div class="row">
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.prix_achat_carton.id_for_label }}">
+                            Prix d'achat du carton
+                            {% if form.prix_achat_carton.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.prix_achat_carton }}
+
+                          {% if form.prix_achat_carton.help_text %}
+                            <small class="field-help">
+                              {{ form.prix_achat_carton.help_text }}
+                            </small>
+                          {% endif %}
+
+                          {% if form.prix_achat_carton.errors %}
+                            <div class="field-error">
+                              {{ form.prix_achat_carton.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="price-info-box">
+                          <i class="fas fa-calculator"></i>
+
+                          <div>
+                            <h6>Coût unitaire calculé</h6>
+
+                            <p>
+                              Le coût d'achat par pièce est calculé à partir du
+                              prix d'achat du carton et de la quantité contenue
+                              dans le carton.
+                            </p>
+
+                            {% if medicament %}
+                              <span class="prix-calcul">
+                                Prix achat / pièce :
+                                {{ medicament.prix_achat_piece|floatformat:2 }}
+                                {{ medicament.devise }}
+                              </span>
+                            {% else %}
+                              <span class="prix-calcul" id="prix-achat-piece">
+                                Prix achat / pièce : 0,00
+                              </span>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- Affichage des éventuels champs ajoutés plus tard -->
+                    {% for field in form %}
+                      {% if field.name != 'nom' and field.name != 'categorie' and field.name != 'forme' and field.name != 'dosage' and field.name != 'fabricant' and field.name != 'description' and field.name != 'devise' and field.name != 'quantite_par_carton' and field.name != 'prix_achat_carton' and field.name != 'prix_vente_piece' %}
+
+                        {% if not field.is_hidden %}
+                          <div class="form-group mt-3">
+                            <label for="{{ field.id_for_label }}">
+                              {{ field.label }}
+
+                              {% if field.field.required %}
+                                <span class="required-star">*</span>
+                              {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                              <small class="field-help">
+                                {{ field.help_text }}
+                              </small>
+                            {% endif %}
+
+                            {% if field.errors %}
+                              <div class="field-error">
+                                {{ field.errors }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        {% endif %}
+
+                      {% endif %}
+                    {% endfor %}
+
+                    <div class="form-actions">
+                      <a
+                        href="{% url 'liste_medicaments' %}"
+                        class="btn-retour"
+                      >
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à la liste
+                      </a>
+
+                      <button type="submit" class="btn-save-medicament">
+                        {% if medicament %}
+                          <i class="fas fa-save"></i>
+                          Mettre à jour le médicament
+                        {% else %}
+                          <i class="fas fa-plus-circle"></i>
+                          Enregistrer le médicament
+                        {% endif %}
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- JavaScript général -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const formFields = document.querySelectorAll(
+        ".medicament-card input, .medicament-card select, .medicament-card textarea"
+      );
+
+      formFields.forEach(function (field) {
+        if (
+          field.type !== "checkbox" &&
+          field.type !== "hidden"
+        ) {
+          field.classList.add("form-control");
+        }
+      });
+
+      const quantiteInput = document.getElementById(
+        "{{ form.quantite_par_carton.id_for_label }}"
+      );
+
+      const prixCartonInput = document.getElementById(
+        "{{ form.prix_achat_carton.id_for_label }}"
+      );
+
+      const deviseInput = document.getElementById(
+        "{{ form.devise.id_for_label }}"
+      );
+
+      const affichagePrixPiece = document.getElementById(
+        "prix-achat-piece"
+      );
+
+      function formaterMontant(montant) {
+        if (isNaN(montant) || montant <= 0) {
+          return "0,00";
+        }
+
+        return montant.toLocaleString("fr-FR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function calculerPrixAchatPiece() {
+        if (
+          !quantiteInput ||
+          !prixCartonInput ||
+          !affichagePrixPiece
+        ) {
+          return;
+        }
+
+        const quantite = parseFloat(quantiteInput.value);
+        const prixCarton = parseFloat(prixCartonInput.value);
+
+        let devise = "";
+
+        if (deviseInput && deviseInput.value) {
+          devise = " " + deviseInput.value;
+        }
+
+        let prixPiece = 0;
+
+        if (
+          !isNaN(quantite) &&
+          !isNaN(prixCarton) &&
+          quantite > 0 &&
+          prixCarton >= 0
+        ) {
+          prixPiece = prixCarton / quantite;
+        }
+
+        affichagePrixPiece.textContent =
+          "Prix achat / pièce : " +
+          formaterMontant(prixPiece) +
+          devise;
+      }
+
+      if (quantiteInput) {
+        quantiteInput.addEventListener("input", calculerPrixAchatPiece);
+      }
+
+      if (prixCartonInput) {
+        prixCartonInput.addEventListener("input", calculerPrixAchatPiece);
+      }
+
+      if (deviseInput) {
+        deviseInput.addEventListener("change", calculerPrixAchatPiece);
+      }
+
+      {% if not medicament %}
+        calculerPrixAchatPiece();
+      {% endif %}
+    });
+  </script>
+</body>
+
+</html>

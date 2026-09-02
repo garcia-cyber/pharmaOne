@@ -1,0 +1,1026 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>Médicaments | {{ name_phar }}</title>
+
+  <!-- CSS général -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* Entête de page */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+      box-shadow: none;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 43px;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Bouton ajouter */
+    .btn-add-medicament {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-add-medicament:hover {
+      color: #ffffff;
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 17px rgba(15, 118, 110, 0.28);
+    }
+
+    /* Carte */
+    .pharma-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .pharma-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .pharma-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .pharma-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .medicament-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .pharma-card-body {
+      padding: 20px;
+    }
+
+    /* Bloc de recherche et filtres */
+    .filter-box {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid #e5efed;
+      border-radius: 11px;
+      background: #f9fdfc;
+    }
+
+    .filter-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 13px;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .filter-title i {
+      color: var(--pharma-primary);
+    }
+
+    .form-control,
+    .custom-select,
+    select,
+    input[type="text"] {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 11px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #ffffff;
+      color: var(--pharma-text);
+      font-size: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus,
+    .custom-select:focus,
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--pharma-primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      color: #94a3b8;
+      font-size: 13px;
+      transform: translateY(-50%);
+    }
+
+    .search-wrapper input {
+      padding-left: 34px;
+    }
+
+    .btn-search {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-search:hover {
+      background: var(--pharma-primary-dark);
+    }
+
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 1px solid #d5e1df;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    /* Tableau */
+    .table-responsive {
+      overflow-x: auto;
+      border: 1px solid #edf2f7;
+      border-radius: 10px;
+    }
+
+    .table {
+      width: 100%;
+      min-width: 1050px;
+      margin: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table thead th {
+      padding: 12px 13px;
+      border-top: 0;
+      border-bottom: 1px solid #dfe8e6;
+      background: #f7fbfa;
+      color: #52616b;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.35px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .table tbody td {
+      padding: 13px;
+      border-top: 1px solid #edf2f7;
+      color: #475569;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    .table tbody tr:first-child td {
+      border-top: 0;
+    }
+
+    .table tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    .table tbody tr:hover {
+      background: #f8fdfc;
+    }
+
+    .medicament-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .medicament-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+    }
+
+    .medicament-icon i {
+      font-size: 15px;
+    }
+
+    .medicament-main-name {
+      display: block;
+      color: var(--pharma-text);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .medicament-fabricant {
+      display: block;
+      margin-top: 2px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-pharma {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      border-radius: 20px;
+      background: var(--pharma-blue-light);
+      color: #1d4ed8;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge-forme {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      border: 1px solid #d7e7e4;
+      border-radius: 20px;
+      background: #ffffff;
+      color: #47615d;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-devise {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 7px;
+      border-radius: 5px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .money-value {
+      color: var(--pharma-text);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .money-label {
+      display: block;
+      margin-top: 2px;
+      color: var(--pharma-muted);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .positive-margin {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #15803d;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .negative-margin {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--pharma-red);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .neutral-margin {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 31px;
+      height: 31px;
+      border: 1px solid #d8e5e2;
+      border-radius: 7px;
+      background: #ffffff;
+      color: var(--pharma-primary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    /* Etat vide */
+    .empty-state {
+      padding: 55px 20px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 70px;
+      height: 70px;
+      margin-bottom: 15px;
+      border-radius: 19px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+    }
+
+    .empty-icon i {
+      font-size: 29px;
+    }
+
+    .empty-state h5 {
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .empty-state p {
+      max-width: 430px;
+      margin: 8px auto 18px;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .pharmacie-name {
+        display: none;
+      }
+
+      .section-header-icon {
+        display: none;
+      }
+
+      .header-actions {
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      .btn-add-medicament {
+        width: 100%;
+      }
+
+      .section-header {
+        flex-wrap: wrap;
+      }
+
+      .pharma-card-header {
+        padding: 14px;
+      }
+
+      .pharma-card-body {
+        padding: 14px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .filter-box {
+        padding: 13px;
+      }
+
+      .medicament-count {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      {% include "back-end/includes/header.html" %}
+
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- Entête -->
+          <div class="section-header">
+
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-pills"></i>
+              </div>
+
+              <div>
+                <h1>Catalogue des médicaments</h1>
+                <p>Consultez et gérez les médicaments de votre pharmacie.</p>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center header-actions">
+              <div class="pharmacie-name mr-2">
+                <i class="fas fa-clinic-medical"></i>
+                {{ name_phar|default:"Pharmacie non définie" }}
+              </div>
+
+              <!-- Remplace creer_medicament par le vrai nom de ton URL si différent -->
+              <a href="{% url 'creer_medicament' %}" class="btn-add-medicament">
+                <i class="fas fa-plus"></i>
+                Ajouter un médicament
+              </a>
+            </div>
+
+          </div>
+
+          <div class="section-body">
+            <div class="pharma-card">
+
+              <div class="pharma-card-header">
+                <h4>
+                  <i class="fas fa-list"></i>
+                  Liste des médicaments
+                </h4>
+
+                <span class="medicament-count">
+                  <i class="fas fa-capsules"></i>
+                  {{ medicaments|length }} médicament{{ medicaments|length|pluralize }}
+                </span>
+              </div>
+
+              <div class="pharma-card-body">
+
+                <!-- Formulaire recherche et filtres -->
+                <form method="get" class="filter-box">
+                  <div class="filter-title">
+                    <i class="fas fa-filter"></i>
+                    Recherche et filtres
+                  </div>
+
+                  <div class="row">
+
+                    <!-- Recherche par nom -->
+                    <div class="col-lg-5 col-md-6">
+                      <div class="form-group mb-md-0">
+                        <label for="id_q">Rechercher un médicament</label>
+
+                        <div class="search-wrapper">
+                          <i class="fas fa-search"></i>
+
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="id_q"
+                            name="q"
+                            value="{{ recherche }}"
+                            placeholder="Ex. Paracétamol"
+                          >
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Catégorie -->
+                    <div class="col-lg-2 col-md-3">
+                      <div class="form-group mb-md-0">
+                        <label for="id_categorie">Catégorie</label>
+
+                        <select
+                          name="categorie"
+                          id="id_categorie"
+                          class="form-control"
+                        >
+                          <option value="">Toutes</option>
+
+                          {% for valeur, libelle in categories %}
+                            <option
+                              value="{{ valeur }}"
+                              {% if categorie_selectionnee == valeur %}selected{% endif %}
+                            >
+                              {{ libelle }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Forme -->
+                    <div class="col-lg-2 col-md-3">
+                      <div class="form-group mb-md-0">
+                        <label for="id_forme">Forme</label>
+
+                        <select
+                          name="forme"
+                          id="id_forme"
+                          class="form-control"
+                        >
+                          <option value="">Toutes</option>
+
+                          {% for valeur, libelle in formes %}
+                            <option
+                              value="{{ valeur }}"
+                              {% if forme_selectionnee == valeur %}selected{% endif %}
+                            >
+                              {{ libelle }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Bouton rechercher -->
+                    <div class="col-lg-2 col-md-6">
+                      <div class="form-group mb-md-0">
+                        <label class="d-none d-md-block">&nbsp;</label>
+
+                        <button type="submit" class="btn-search">
+                          <i class="fas fa-search"></i>
+                          Rechercher
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Réinitialiser -->
+                    <div class="col-lg-1 col-md-6">
+                      <div class="form-group mb-0">
+                        <label class="d-none d-md-block">&nbsp;</label>
+
+                        <a
+                          href="{% url 'liste_medicaments' %}"
+                          class="btn-reset"
+                          title="Réinitialiser les filtres"
+                        >
+                          <i class="fas fa-redo"></i>
+                          <span class="d-lg-none">Réinitialiser</span>
+                        </a>
+                      </div>
+                    </div>
+
+                  </div>
+                </form>
+
+                <!-- Tableau médicaments -->
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Médicament</th>
+                        <th>Catégorie</th>
+                        <th>Forme / Dosage</th>
+                        <th>Conditionnement</th>
+                        <th>Prix achat</th>
+                        <th>Prix vente</th>
+                        <th>Marge / pièce</th>
+                        <th>Devise</th>
+                        <th class="text-center">Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {% for medicament in medicaments %}
+                        <tr>
+
+                          <!-- Médicament -->
+                          <td>
+                            <div class="medicament-name">
+                              <div class="medicament-icon">
+                                <i class="fas fa-pills"></i>
+                              </div>
+
+                              <div>
+                                <span class="medicament-main-name">
+                                  {{ medicament.nom }}
+                                </span>
+
+                                <span class="medicament-fabricant">
+                                  {% if medicament.fabricant %}
+                                    {{ medicament.fabricant }}
+                                  {% else %}
+                                    Fabricant non renseigné
+                                  {% endif %}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <!-- Catégorie -->
+                          <td>
+                            <span class="badge-pharma">
+                              {{ medicament.get_categorie_display }}
+                            </span>
+                          </td>
+
+                          <!-- Forme + dosage -->
+                          <td>
+                            <span class="badge-forme">
+                              {{ medicament.get_forme_display }}
+                            </span>
+
+                            {% if medicament.dosage %}
+                              <span class="medicament-fabricant">
+                                {{ medicament.dosage }}
+                              </span>
+                            {% endif %}
+                          </td>
+
+                          <!-- Quantité par carton -->
+                          <td>
+                            <strong>{{ medicament.quantite_par_carton }}</strong>
+                            <span class="medicament-fabricant">
+                              pièce{{ medicament.quantite_par_carton|pluralize }}
+                              / carton
+                            </span>
+                          </td>
+
+                          <!-- Prix achat -->
+                          <td>
+                            <span class="money-value">
+                              {{ medicament.prix_achat_carton|floatformat:2 }}
+                            </span>
+
+                            <span class="money-label">
+                              par carton
+                            </span>
+
+                            <span class="money-label">
+                              {{ medicament.prix_achat_piece|floatformat:2 }}
+                              / pièce
+                            </span>
+                          </td>
+
+                          <!-- Prix vente -->
+                          <td>
+                            <span class="money-value">
+                              {{ medicament.prix_vente_piece|floatformat:2 }}
+                            </span>
+
+                            <span class="money-label">
+                              par pièce
+                            </span>
+                          </td>
+
+                          <!-- Marge par pièce -->
+                          <td>
+                            {% if medicament.prix_vente_piece > medicament.prix_achat_piece %}
+                              <span class="positive-margin">
+                                <i class="fas fa-arrow-up"></i>
+                                +{{ medicament.prix_vente_piece|add:0|floatformat:2 }}
+                              </span>
+
+                              <span class="money-label">
+                                Bénéfice à calculer dans la vue
+                              </span>
+
+                            {% elif medicament.prix_vente_piece < medicament.prix_achat_piece %}
+                              <span class="negative-margin">
+                                <i class="fas fa-arrow-down"></i>
+                                Vente à perte
+                              </span>
+
+                            {% else %}
+                              <span class="neutral-margin">
+                                0,00
+                              </span>
+                            {% endif %}
+                          </td>
+
+                          <!-- Devise -->
+                          <td>
+                            <span class="badge-devise">
+                              {{ medicament.devise }}
+                            </span>
+                          </td>
+
+                          <!-- Action -->
+                          <td class="text-center">
+                            <!-- Remplace # par une URL d'édition lorsqu'elle existe -->
+                            <a
+                                href="{% url 'modifier_medicament' medicament.id %}"
+                                class="btn-action"
+                                title="Modifier {{ medicament.nom }}"
+                            >
+                            <i class="fas fa-pen"></i>
+                            </a>
+                          </td>
+
+                        </tr>
+
+                      {% empty %}
+                        <tr>
+                          <td colspan="9">
+                            <div class="empty-state">
+
+                              <div class="empty-icon">
+                                <i class="fas fa-capsules"></i>
+                              </div>
+
+                              {% if recherche or categorie_selectionnee or forme_selectionnee %}
+                                <h5>Aucun médicament trouvé</h5>
+                                <p>
+                                  Aucun médicament ne correspond à votre recherche
+                                  ou aux filtres sélectionnés.
+                                </p>
+
+                                <a
+                                  href="{% url 'liste_medicaments' %}"
+                                  class="btn-reset"
+                                  style="width: auto; display: inline-flex;"
+                                >
+                                  <i class="fas fa-redo"></i>
+                                  Effacer les filtres
+                                </a>
+                              {% else %}
+                                <h5>Aucun médicament enregistré</h5>
+                                <p>
+                                  Votre catalogue est vide. Commencez par ajouter
+                                  votre premier médicament à cette pharmacie.
+                                </p>
+
+                                <a
+                                  href="{% url 'creer_medicament' %}"
+                                  class="btn-add-medicament"
+                                >
+                                  <i class="fas fa-plus"></i>
+                                  Ajouter un médicament
+                                </a>
+                              {% endif %}
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("id_q");
+
+      if (searchInput) {
+        searchInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            this.closest("form").submit();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

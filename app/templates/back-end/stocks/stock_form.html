@@ -1,0 +1,1216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>Approvisionnement de stock | {{ name_phar }}</title>
+
+  <!-- CSS général : garder tes fichiers du thème -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  <!-- Include original de ton projet -->
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* Entête */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+      box-shadow: none;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 43px;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Carte principale */
+    .stock-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .stock-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .stock-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 21px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .stock-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .stock-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .required-info {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .required-star {
+      color: var(--pharma-red);
+      font-weight: 800;
+    }
+
+    .stock-card-body {
+      padding: 22px;
+    }
+
+    /* Alertes */
+    .pharma-alert-success,
+    .pharma-alert-danger,
+    .pharma-alert-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pharma-alert-success {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .pharma-alert-success i {
+      margin-top: 1px;
+      color: var(--pharma-green);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .pharma-alert-danger i {
+      margin-top: 1px;
+      color: var(--pharma-red);
+      font-size: 16px;
+    }
+
+    .pharma-alert-warning {
+      border: 1px solid #fde68a;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .pharma-alert-warning i {
+      margin-top: 1px;
+      color: var(--pharma-orange);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    /* Titres des sections */
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      text-transform: uppercase;
+    }
+
+    .form-section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 13px;
+    }
+
+    /* Champs */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .form-control,
+    .custom-select,
+    select,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfdfd;
+      color: var(--pharma-text);
+      font-size: 13px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .form-control:focus,
+    .custom-select:focus,
+    select:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus {
+      border-color: var(--pharma-primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .form-control::placeholder {
+      color: #94a3b8;
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--pharma-red);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .field-error ul {
+      margin: 0;
+      padding-left: 17px;
+    }
+
+    /* Champ de recherche des médicaments */
+    .medicament-search-wrapper {
+      position: relative;
+      margin-bottom: 9px;
+    }
+
+    .medicament-search-icon {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      color: var(--pharma-primary);
+      font-size: 13px;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .medicament-search-input {
+      padding-left: 36px !important;
+    }
+
+    .search-result-info {
+      display: none;
+      margin-top: 6px;
+      color: var(--pharma-primary-dark);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .search-result-info.is-visible {
+      display: block;
+    }
+
+    /* Zone de calcul automatique */
+    .stock-info-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin-top: 4px;
+      padding: 14px;
+      border: 1px solid #ccece4;
+      border-radius: 9px;
+      background: #f4fffc;
+    }
+
+    .stock-info-box i {
+      margin-top: 2px;
+      color: var(--pharma-primary);
+      font-size: 17px;
+    }
+
+    .stock-info-box h6 {
+      margin: 0 0 4px;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .stock-info-box p {
+      margin: 0;
+      color: #52716a;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .stock-calcul {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Détails médicament */
+    .stock-details-box {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      background: #f8fbff;
+    }
+
+    .stock-details-box.is-visible {
+      display: block;
+    }
+
+    .stock-details-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .stock-details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stock-detail-item {
+      padding: 10px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .stock-detail-label {
+      display: block;
+      margin-bottom: 3px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .stock-detail-value {
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Boutons */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-retour {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border: 1px solid #d6e0de;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-retour:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-save-stock {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 205px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-save-stock:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 17px rgba(15, 118, 110, 0.28);
+    }
+
+    .btn-save-stock:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .stock-container {
+        max-width: 760px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name,
+      .required-info {
+        display: none;
+      }
+
+      .stock-card-header {
+        align-items: flex-start;
+        padding: 15px;
+      }
+
+      .stock-card-body {
+        padding: 16px;
+      }
+
+      .stock-details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-retour,
+      .btn-save-stock {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Include navbar original -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Include sidebar original -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-boxes"></i>
+              </div>
+
+              <div>
+                <h1>Approvisionnement du stock</h1>
+                <p>
+                  Enregistrez une nouvelle livraison de médicaments dans votre pharmacie.
+                </p>
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="stock-container">
+              <div class="stock-card">
+
+                <div class="stock-card-header">
+                  <h4>
+                    <i class="fas fa-truck-loading"></i>
+                    Nouvelle entrée de stock
+                  </h4>
+
+                  <span class="required-info">
+                    <span class="required-star">*</span>
+                    Champs obligatoires
+                  </span>
+                </div>
+
+                <div class="stock-card-body">
+
+                  {% if msg %}
+                    <div class="pharma-alert-success" role="alert">
+                      <i class="fas fa-check-circle"></i>
+                      <span>{{ msg }}</span>
+                    </div>
+                  {% endif %}
+
+                  {% if not pharmacie_obj %}
+                    <div class="pharma-alert-warning" role="alert">
+                      <i class="fas fa-exclamation-triangle"></i>
+                      <span>
+                        Vous devez d'abord créer votre pharmacie avant de pouvoir
+                        enregistrer un approvisionnement.
+                      </span>
+                    </div>
+                  {% endif %}
+
+                  {% if form.non_field_errors %}
+                    <div class="pharma-alert-danger" role="alert">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <div>{{ form.non_field_errors }}</div>
+                    </div>
+                  {% endif %}
+
+                  <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% for hidden_field in form.hidden_fields %}
+                      {{ hidden_field }}
+                    {% endfor %}
+
+                    <!-- Médicament et lot -->
+                    <div class="form-section-title">
+                      <i class="fas fa-pills"></i>
+                      Informations du lot reçu
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.medicament.id_for_label }}">
+                            Médicament
+                            {% if form.medicament.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          <!-- Recherche native, sans Select2 -->
+                          <div class="medicament-search-wrapper">
+                            <i class="fas fa-search medicament-search-icon"></i>
+
+                            <input
+                              type="text"
+                              id="recherche-medicament"
+                              class="form-control medicament-search-input"
+                              placeholder="Rechercher par nom ou dosage..."
+                              autocomplete="off"
+                            >
+                          </div>
+
+                          <!-- Select Django normal : garde les médicaments -->
+                          {{ form.medicament }}
+
+                          <span
+                            class="search-result-info"
+                            id="recherche-resultat"
+                          >
+                          </span>
+
+                          <small class="field-help">
+                            Tapez une partie du nom ou du dosage, puis choisissez
+                            le médicament dans la liste filtrée.
+                          </small>
+
+                          {% if form.medicament.errors %}
+                            <div class="field-error">
+                              {{ form.medicament.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.numero_lot.id_for_label }}">
+                            Numéro de lot
+                            {% if form.numero_lot.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.numero_lot }}
+
+                          <small class="field-help">
+                            Exemple : LOT-2026-001 ou FAB-2026-09.
+                          </small>
+
+                          {% if form.numero_lot.errors %}
+                            <div class="field-error">
+                              {{ form.numero_lot.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Quantité et péremption -->
+                    <div class="form-section-title mt-2">
+                      <i class="fas fa-box-open"></i>
+                      Quantité et péremption
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.nombre_cartons.id_for_label }}">
+                            Nombre de cartons reçus
+                            {% if form.nombre_cartons.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.nombre_cartons }}
+
+                          <small class="field-help">
+                            Indiquez le nombre total de cartons livrés pour ce lot.
+                          </small>
+
+                          {% if form.nombre_cartons.errors %}
+                            <div class="field-error">
+                              {{ form.nombre_cartons.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.date_peremption.id_for_label }}">
+                            Date de péremption
+                            {% if form.date_peremption.field.required %}
+                              <span class="required-star">*</span>
+                            {% endif %}
+                          </label>
+
+                          {{ form.date_peremption }}
+
+                          <small class="field-help">
+                            La date doit être ultérieure à la date actuelle.
+                          </small>
+
+                          {% if form.date_peremption.errors %}
+                            <div class="field-error">
+                              {{ form.date_peremption.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Calcul automatique -->
+                    <div class="form-section-title mt-2">
+                      <i class="fas fa-calculator"></i>
+                      Calcul automatique
+                    </div>
+
+                    <div class="stock-info-box">
+                      <i class="fas fa-info-circle"></i>
+
+                      <div>
+                        <h6>Quantité totale automatiquement calculée</h6>
+
+                        <p>
+                          La quantité initiale est égale au nombre de cartons reçus
+                          multiplié par le nombre de pièces contenues dans un carton.
+                          Les prix et la devise sont repris du médicament choisi.
+                        </p>
+
+                        <span class="stock-calcul" id="quantite-totale-preview">
+                          Quantité prévue : 0 pièce
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Informations du médicament sélectionné -->
+                    <div class="stock-details-box" id="medicament-details">
+                      <h6 class="stock-details-title">
+                        <i class="fas fa-pills"></i>
+                        Informations du médicament sélectionné
+                      </h6>
+
+                      <div class="stock-details-grid">
+                        <div class="stock-detail-item">
+                          <span class="stock-detail-label">
+                            Quantité / carton
+                          </span>
+                          <span
+                            class="stock-detail-value"
+                            id="detail-quantite-carton"
+                          >
+                            -
+                          </span>
+                        </div>
+
+                        <div class="stock-detail-item">
+                          <span class="stock-detail-label">Devise</span>
+                          <span
+                            class="stock-detail-value"
+                            id="detail-devise"
+                          >
+                            -
+                          </span>
+                        </div>
+
+                        <div class="stock-detail-item">
+                          <span class="stock-detail-label">
+                            Prix achat / carton
+                          </span>
+                          <span
+                            class="stock-detail-value"
+                            id="detail-prix-achat"
+                          >
+                            -
+                          </span>
+                        </div>
+
+                        <div class="stock-detail-item">
+                          <span class="stock-detail-label">
+                            Prix vente / pièce
+                          </span>
+                          <span
+                            class="stock-detail-value"
+                            id="detail-prix-vente"
+                          >
+                            -
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                      <a
+                        href="{% url 'liste_stock' %}"
+                        class="btn-retour"
+                      >
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à la liste
+                      </a>
+
+                      <button
+                        type="submit"
+                        class="btn-save-stock"
+                        {% if not pharmacie_obj %}disabled{% endif %}
+                      >
+                        <i class="fas fa-plus-circle"></i>
+                        Enregistrer l'approvisionnement
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts originaux du thème : garder cet ordre -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <!-- Données envoyées de la vue creer_stock -->
+  {{ medicaments_json|json_script:"medicaments-data" }}
+
+  <!-- JavaScript natif : aucun jQuery, aucun Select2 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const formFields = document.querySelectorAll(
+        ".stock-card input, .stock-card select, .stock-card textarea"
+      );
+
+      formFields.forEach(function (field) {
+        if (
+          field.type !== "checkbox" &&
+          field.type !== "hidden" &&
+          field.type !== "submit"
+        ) {
+          field.classList.add("form-control");
+        }
+      });
+
+      const medicamentInput = document.getElementById(
+        "{{ form.medicament.id_for_label }}"
+      );
+
+      const rechercheMedicamentInput = document.getElementById(
+        "recherche-medicament"
+      );
+
+      const rechercheResultat = document.getElementById(
+        "recherche-resultat"
+      );
+
+      const nombreCartonsInput = document.getElementById(
+        "{{ form.nombre_cartons.id_for_label }}"
+      );
+
+      const quantitePreview = document.getElementById(
+        "quantite-totale-preview"
+      );
+
+      const medicamentDetailsBox = document.getElementById(
+        "medicament-details"
+      );
+
+      const detailQuantiteCarton = document.getElementById(
+        "detail-quantite-carton"
+      );
+
+      const detailDevise = document.getElementById(
+        "detail-devise"
+      );
+
+      const detailPrixAchat = document.getElementById(
+        "detail-prix-achat"
+      );
+
+      const detailPrixVente = document.getElementById(
+        "detail-prix-vente"
+      );
+
+      let medicaments = {};
+
+      try {
+        const medicamentsData = document.getElementById(
+          "medicaments-data"
+        );
+
+        if (medicamentsData) {
+          medicaments = JSON.parse(medicamentsData.textContent);
+        }
+      } catch (error) {
+        console.error(
+          "Impossible de charger les données des médicaments.",
+          error
+        );
+      }
+
+      function formaterMontant(montant) {
+        const nombre = Number(montant);
+
+        if (isNaN(nombre)) {
+          return "0,00";
+        }
+
+        return nombre.toLocaleString("fr-FR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function viderDetailsMedicament() {
+        if (medicamentDetailsBox) {
+          medicamentDetailsBox.classList.remove("is-visible");
+        }
+
+        if (detailQuantiteCarton) {
+          detailQuantiteCarton.textContent = "-";
+        }
+
+        if (detailDevise) {
+          detailDevise.textContent = "-";
+        }
+
+        if (detailPrixAchat) {
+          detailPrixAchat.textContent = "-";
+        }
+
+        if (detailPrixVente) {
+          detailPrixVente.textContent = "-";
+        }
+      }
+
+      function afficherDetailsMedicament() {
+        if (!medicamentInput) {
+          return;
+        }
+
+        const medicamentId = medicamentInput.value;
+        const medicament = medicaments[medicamentId];
+
+        if (!medicament) {
+          viderDetailsMedicament();
+          return;
+        }
+
+        if (medicamentDetailsBox) {
+          medicamentDetailsBox.classList.add("is-visible");
+        }
+
+        if (detailQuantiteCarton) {
+          detailQuantiteCarton.textContent =
+            medicament.quantite_par_carton + " pièce(s)";
+        }
+
+        if (detailDevise) {
+          detailDevise.textContent = medicament.devise;
+        }
+
+        if (detailPrixAchat) {
+          detailPrixAchat.textContent =
+            formaterMontant(medicament.prix_achat_carton) +
+            " " +
+            medicament.devise;
+        }
+
+        if (detailPrixVente) {
+          detailPrixVente.textContent =
+            formaterMontant(medicament.prix_vente_piece) +
+            " " +
+            medicament.devise;
+        }
+      }
+
+      function calculerQuantiteTotale() {
+        if (!quantitePreview) {
+          return;
+        }
+
+        const medicamentId = medicamentInput
+          ? medicamentInput.value
+          : null;
+
+        const medicament = medicaments[medicamentId];
+
+        const nombreCartons = nombreCartonsInput
+          ? parseInt(nombreCartonsInput.value, 10)
+          : 0;
+
+        if (
+          !medicament ||
+          isNaN(nombreCartons) ||
+          nombreCartons <= 0
+        ) {
+          quantitePreview.textContent = "Quantité prévue : 0 pièce";
+          return;
+        }
+
+        const quantiteTotale =
+          nombreCartons * medicament.quantite_par_carton;
+
+        quantitePreview.textContent =
+          "Quantité prévue : " +
+          quantiteTotale.toLocaleString("fr-FR") +
+          " pièce(s)";
+      }
+
+      function filtrerMedicaments() {
+        if (!rechercheMedicamentInput || !medicamentInput) {
+          return;
+        }
+
+        const recherche = rechercheMedicamentInput.value
+          .trim()
+          .toLowerCase();
+
+        let totalVisible = 0;
+
+        Array.from(medicamentInput.options).forEach(function (option) {
+          if (!option.value) {
+            option.hidden = false;
+            return;
+          }
+
+          const texteOption = option.text.toLowerCase();
+
+          const estVisible =
+            recherche === "" ||
+            texteOption.includes(recherche);
+
+          option.hidden = !estVisible;
+
+          if (estVisible) {
+            totalVisible += 1;
+          }
+        });
+
+        if (rechercheResultat) {
+          if (recherche !== "") {
+            rechercheResultat.textContent =
+              totalVisible +
+              " médicament(s) trouvé(s).";
+
+            rechercheResultat.classList.add("is-visible");
+          } else {
+            rechercheResultat.textContent = "";
+            rechercheResultat.classList.remove("is-visible");
+          }
+        }
+
+        const optionSelectionnee = medicamentInput.options[
+          medicamentInput.selectedIndex
+        ];
+
+        if (
+          optionSelectionnee &&
+          optionSelectionnee.value &&
+          optionSelectionnee.hidden
+        ) {
+          medicamentInput.value = "";
+          medicamentInput.dispatchEvent(
+            new Event("change", {
+              bubbles: true
+            })
+          );
+        }
+      }
+
+      if (rechercheMedicamentInput) {
+        rechercheMedicamentInput.addEventListener(
+          "input",
+          filtrerMedicaments
+        );
+      }
+
+      if (medicamentInput) {
+        medicamentInput.addEventListener("change", function () {
+          afficherDetailsMedicament();
+          calculerQuantiteTotale();
+        });
+      }
+
+      if (nombreCartonsInput) {
+        nombreCartonsInput.addEventListener(
+          "input",
+          calculerQuantiteTotale
+        );
+      }
+
+      afficherDetailsMedicament();
+      calculerQuantiteTotale();
+    });
+  </script>
+</body>
+</html>

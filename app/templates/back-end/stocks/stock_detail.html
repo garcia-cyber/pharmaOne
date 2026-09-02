@@ -1,0 +1,1279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>
+    Détail du lot {{ stock.numero_lot }} | {{ name_phar }}
+  </title>
+
+  <!-- CSS général -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* En-tête */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+      box-shadow: none;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 43px;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Conteneur principal */
+    .stock-detail-container {
+      width: 100%;
+      max-width: 1050px;
+      margin: 0 auto;
+    }
+
+    .stock-detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+      gap: 18px;
+    }
+
+    /* Cartes */
+    .detail-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .detail-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 20px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .detail-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .detail-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .detail-card-body {
+      padding: 20px;
+    }
+
+    /* Lot principal */
+    .lot-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid #b9ece3;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #f0fdfa, #f5fbff);
+    }
+
+    .lot-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 46px;
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.18);
+    }
+
+    .lot-icon i {
+      font-size: 19px;
+    }
+
+    .lot-banner h3 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .lot-banner p {
+      margin: 5px 0 0;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .lot-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #e2f7f2;
+      color: var(--pharma-primary-dark);
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    /* Statut */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-badge i {
+      font-size: 8px;
+    }
+
+    .status-disponible {
+      background: var(--pharma-green-light);
+      color: #15803d;
+    }
+
+    .status-perime {
+      background: var(--pharma-red-light);
+      color: #b91c1c;
+    }
+
+    .status-rupture {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    /* Titres */
+    .detail-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 22px 0 13px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .detail-section-title:first-child {
+      margin-top: 0;
+    }
+
+    .detail-section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 12px;
+    }
+
+    /* Grilles informations */
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .detail-info-item {
+      padding: 12px;
+      border: 1px solid #edf2f7;
+      border-radius: 9px;
+      background: #fbfdfd;
+    }
+
+    .detail-info-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      text-transform: uppercase;
+    }
+
+    .detail-info-value {
+      display: block;
+      color: var(--pharma-text);
+      font-size: 12px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .detail-info-subvalue {
+      display: block;
+      margin-top: 4px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Cartes quantité */
+    .quantity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .quantity-card {
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .quantity-card.initial {
+      border: 1px solid #bfdbfe;
+      background: var(--pharma-blue-light);
+    }
+
+    .quantity-card.remaining {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+    }
+
+    .quantity-label {
+      display: block;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .quantity-value {
+      display: block;
+      margin-top: 7px;
+      color: #0f172a;
+      font-size: 23px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .quantity-unit {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .quantity-description {
+      display: block;
+      margin-top: 7px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* Valeurs financières */
+    .financial-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .financial-item {
+      padding: 13px;
+      border: 1px solid #dce6e4;
+      border-radius: 9px;
+      background: #ffffff;
+    }
+
+    .financial-item.purchase {
+      border-color: #fde68a;
+      background: #fffbeb;
+    }
+
+    .financial-item.sales {
+      border-color: #bbf7d0;
+      background: #f3fff6;
+    }
+
+    .financial-label {
+      display: block;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .financial-value {
+      display: block;
+      margin-top: 6px;
+      color: #1e293b;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .financial-help {
+      display: block;
+      margin-top: 5px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Sidebar récapitulatif */
+    .summary-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .summary-card-header {
+      padding: 17px 18px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .summary-card-header h5 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .summary-card-header h5 i {
+      color: var(--pharma-primary);
+    }
+
+    .summary-card-body {
+      padding: 17px 18px;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .summary-row:first-child {
+      padding-top: 0;
+    }
+
+    .summary-row:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .summary-label {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .summary-value {
+      max-width: 60%;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    /* Alerte */
+    .warning-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .warning-box i {
+      margin-top: 2px;
+      font-size: 15px;
+    }
+
+    .warning-expired {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .warning-expired i {
+      color: var(--pharma-red);
+    }
+
+    .warning-empty {
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .warning-empty i {
+      color: #64748b;
+    }
+
+    /* Boutons */
+    .detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 14px;
+      border: 1px solid #d6e0de;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.18);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-print:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 17px rgba(15, 118, 110, 0.28);
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .stock-detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name {
+        display: none;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .detail-card-header,
+      .detail-card-body,
+      .summary-card-header,
+      .summary-card-body {
+        padding: 15px;
+      }
+
+      .detail-info-grid,
+      .quantity-grid,
+      .financial-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .lot-banner {
+        padding: 13px;
+      }
+
+      .detail-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-back,
+      .btn-print {
+        width: 100%;
+      }
+    }
+
+    @media print {
+      .main-sidebar,
+      .navbar-bg,
+      .main-navbar,
+      .main-footer,
+      .section-header,
+      .detail-actions,
+      .loader {
+        display: none !important;
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      .section {
+        padding: 0 !important;
+      }
+
+      .detail-card,
+      .summary-card {
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Navbar -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Sidebar -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- Entête -->
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-box-open"></i>
+              </div>
+
+              <div>
+                <h1>Détail du lot de stock</h1>
+                <p>
+                  Consultez les informations complètes de ce lot d’approvisionnement.
+                </p>
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="stock-detail-container">
+
+              <div class="stock-detail-grid">
+
+                <!-- Colonne principale -->
+                <div class="detail-card">
+                  <div class="detail-card-header">
+                    <h4>
+                      <i class="fas fa-pills"></i>
+                      Informations du médicament et du lot
+                    </h4>
+
+                    {% if statut_stock == "rupture" %}
+                      <span class="status-badge status-rupture">
+                        <i class="fas fa-circle"></i>
+                        {{ libelle_statut }}
+                      </span>
+
+                    {% elif statut_stock == "perime" %}
+                      <span class="status-badge status-perime">
+                        <i class="fas fa-circle"></i>
+                        {{ libelle_statut }}
+                      </span>
+
+                    {% else %}
+                      <span class="status-badge status-disponible">
+                        <i class="fas fa-circle"></i>
+                        {{ libelle_statut }}
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  <div class="detail-card-body">
+
+                    <!-- Résumé médicament -->
+                    <div class="lot-banner">
+                      <div class="lot-icon">
+                        <i class="fas fa-capsules"></i>
+                      </div>
+
+                      <div>
+                        <h3>
+                          {{ stock.medicament.nom }}
+                        </h3>
+
+                        <p>
+                          {{ stock.medicament.get_forme_display }}
+                          {% if stock.medicament.dosage %}
+                            · {{ stock.medicament.dosage }}
+                          {% endif %}
+
+                          {% if stock.medicament.categorie %}
+                            · {{ stock.medicament.get_categorie_display }}
+                          {% endif %}
+                        </p>
+
+                        <span class="lot-code">
+                          <i class="fas fa-barcode"></i>
+                          Lot : {{ stock.numero_lot }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Identification -->
+                    <div class="detail-section-title">
+                      <i class="fas fa-info-circle"></i>
+                      Identification du médicament
+                    </div>
+
+                    <div class="detail-info-grid">
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Nom du médicament
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.nom }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Forme pharmaceutique
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.get_forme_display }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Dosage / concentration
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.dosage|default:"Non défini" }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Catégorie
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.get_categorie_display }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Fabricant / laboratoire
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.fabricant|default:"Non défini" }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Conditionnement
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.quantite_par_carton }}
+                          pièce{{ stock.medicament.quantite_par_carton|pluralize }}
+                          / carton
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Quantités -->
+                    <div class="detail-section-title">
+                      <i class="fas fa-boxes"></i>
+                      Quantités du lot
+                    </div>
+
+                    <div class="quantity-grid">
+                      <div class="quantity-card initial">
+                        <span class="quantity-label">
+                          Quantité reçue initialement
+                        </span>
+
+                        <span class="quantity-value">
+                          {{ stock.quantite_piece|floatformat:0 }}
+                          <span class="quantity-unit">
+                            pièce{{ stock.quantite_piece|pluralize }}
+                          </span>
+                        </span>
+
+                        <span class="quantity-description">
+                          {{ stock.nombre_cartons }}
+                          carton{{ stock.nombre_cartons|pluralize }}
+                          reçu{{ stock.nombre_cartons|pluralize }}
+                          lors de l’approvisionnement.
+                        </span>
+                      </div>
+
+                      <div class="quantity-card remaining">
+                        <span class="quantity-label">
+                          Quantité restante
+                        </span>
+
+                        <span class="quantity-value">
+                          {{ stock.quantite_restante|floatformat:0 }}
+                          <span class="quantity-unit">
+                            pièce{{ stock.quantite_restante|pluralize }}
+                          </span>
+                        </span>
+
+                        <span class="quantity-description">
+                          Stock disponible actuellement pour la vente.
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="detail-section-title">
+                      <i class="fas fa-calendar-alt"></i>
+                      Dates du lot
+                    </div>
+
+                    <div class="detail-info-grid">
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Date d’approvisionnement
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.date_achat|date:"d/m/Y" }}
+                        </span>
+
+                        <span class="detail-info-subvalue">
+                          Date d’enregistrement dans le système
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Date de péremption
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.date_peremption|date:"d/m/Y" }}
+                        </span>
+
+                        <span class="detail-info-subvalue">
+                          {% if stock.est_perime %}
+                            Ce lot est expiré.
+                          {% else %}
+                            Lot non expiré à la date actuelle.
+                          {% endif %}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Tarification -->
+                    <div class="detail-section-title">
+                      <i class="fas fa-money-bill-wave"></i>
+                      Tarification du lot
+                    </div>
+
+                    <div class="financial-grid">
+                      <div class="financial-item purchase">
+                        <span class="financial-label">
+                          Prix d’achat / carton
+                        </span>
+
+                        <span class="financial-value">
+                          {{ stock.prix_achat_carton|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+
+                        <span class="financial-help">
+                          Coût fixé lors de l’approvisionnement
+                        </span>
+                      </div>
+
+                      <div class="financial-item purchase">
+                        <span class="financial-label">
+                          Prix d’achat / pièce
+                        </span>
+
+                        <span class="financial-value">
+                          {{ stock.prix_achat_piece|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+
+                        <span class="financial-help">
+                          Prix carton ÷ quantité par carton
+                        </span>
+                      </div>
+
+                      <div class="financial-item sales">
+                        <span class="financial-label">
+                          Prix de vente / pièce
+                        </span>
+
+                        <span class="financial-value">
+                          {{ stock.prix_vente_piece|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+
+                        <span class="financial-help">
+                          Prix de vente enregistré pour ce lot
+                        </span>
+                      </div>
+
+                      <div class="financial-item sales">
+                        <span class="financial-label">
+                          Valeur de vente potentielle
+                        </span>
+
+                        <span class="financial-value">
+                          {{ stock.valeur_totale_vente_potentielle|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+
+                        <span class="financial-help">
+                          Valeur des pièces restantes
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Valeur achat totale -->
+                    <div class="detail-section-title">
+                      <i class="fas fa-calculator"></i>
+                      Valeur globale du lot
+                    </div>
+
+                    <div class="detail-info-grid">
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Valeur totale à l’achat
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.valeur_totale_achat|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+
+                        <span class="detail-info-subvalue">
+                          {{ stock.nombre_cartons }}
+                          carton{{ stock.nombre_cartons|pluralize }}
+                          × {{ stock.prix_achat_carton|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+                      </div>
+
+                      <div class="detail-info-item">
+                        <span class="detail-info-label">
+                          Description du médicament
+                        </span>
+
+                        <span class="detail-info-value">
+                          {{ stock.medicament.description|default:"Aucune description enregistrée." }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Alertes -->
+                    {% if statut_stock == "perime" %}
+                      <div class="warning-box warning-expired">
+                        <i class="fas fa-exclamation-triangle"></i>
+
+                        <div>
+                          <strong>Attention :</strong>
+                          ce lot est périmé. Il ne doit plus être vendu ni délivré
+                          aux patients. Retire-le du circuit de vente et applique ta
+                          procédure interne de destruction ou retour fournisseur.
+                        </div>
+                      </div>
+
+                    {% elif statut_stock == "rupture" %}
+                      <div class="warning-box warning-empty">
+                        <i class="fas fa-box-open"></i>
+
+                        <div>
+                          <strong>Stock épuisé :</strong>
+                          il ne reste plus aucune pièce disponible dans ce lot.
+                          Tu peux enregistrer un nouvel approvisionnement si nécessaire.
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    <!-- Boutons -->
+                    <div class="detail-actions">
+                      <a
+                        href="{% url 'liste_stock' %}"
+                        class="btn-back"
+                      >
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à la liste
+                      </a>
+
+                      <button
+                        type="button"
+                        class="btn-print"
+                        onclick="window.print()"
+                      >
+                        <i class="fas fa-print"></i>
+                        Imprimer la fiche
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Colonne droite -->
+                <aside>
+                  <div class="summary-card">
+                    <div class="summary-card-header">
+                      <h5>
+                        <i class="fas fa-clipboard-list"></i>
+                        Récapitulatif
+                      </h5>
+                    </div>
+
+                    <div class="summary-card-body">
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Pharmacie
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.pharmacie.nom_pharmacie }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Numéro de lot
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.numero_lot }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Devise
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Cartons achetés
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.nombre_cartons }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Pièces restantes
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.quantite_restante|floatformat:0 }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Enregistré par
+                        </span>
+
+                        <span class="summary-value">
+                          {% if stock.utilisateur.get_full_name %}
+                            {{ stock.utilisateur.get_full_name }}
+                          {% else %}
+                            {{ stock.utilisateur.username }}
+                          {% endif %}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Statut
+                        </span>
+
+                        <span class="summary-value">
+                          {{ libelle_statut }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="summary-card" style="margin-top: 18px;">
+                    <div class="summary-card-header">
+                      <h5>
+                        <i class="fas fa-chart-pie"></i>
+                        Disponibilité
+                      </h5>
+                    </div>
+
+                    <div class="summary-card-body">
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Quantité initiale
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.quantite_piece|floatformat:0 }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Quantité vendue / sortie
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.quantite_piece|add:"-1"|add:1 }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Disponibilité actuelle
+                        </span>
+
+                        <span class="summary-value">
+                          {% if stock.quantite_restante == 0 %}
+                            0 %
+                          {% else %}
+                            Stock disponible
+                          {% endif %}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts d’origine : garder cet ordre -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+</body>
+</html>

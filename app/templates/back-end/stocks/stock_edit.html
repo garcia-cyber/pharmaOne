@@ -1,0 +1,1119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>
+    Modifier le lot {{ stock.numero_lot }} | {{ name_phar }}
+  </title>
+
+  <!-- CSS général -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* Entête */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+      box-shadow: none;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 43px;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Conteneur */
+    .stock-edit-container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .stock-edit-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(270px, 0.7fr);
+      gap: 18px;
+    }
+
+    /* Cartes */
+    .edit-card,
+    .info-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .edit-card-header,
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 20px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .edit-card-header h4,
+    .info-card-header h5 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .edit-card-header h4 i,
+    .info-card-header h5 i {
+      color: var(--pharma-primary);
+    }
+
+    .edit-card-body {
+      padding: 21px;
+    }
+
+    .info-card-body {
+      padding: 17px;
+    }
+
+    /* Avertissement */
+    .edit-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 13px 14px;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .edit-warning i {
+      margin-top: 2px;
+      color: var(--pharma-blue);
+      font-size: 16px;
+    }
+
+    /* Messages Django */
+    .pharma-alert-success,
+    .pharma-alert-danger,
+    .pharma-alert-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pharma-alert-success {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .pharma-alert-success i {
+      margin-top: 1px;
+      color: var(--pharma-green);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .pharma-alert-danger i {
+      margin-top: 1px;
+      color: var(--pharma-red);
+      font-size: 16px;
+    }
+
+    .pharma-alert-warning {
+      border: 1px solid #fde68a;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .pharma-alert-warning i {
+      margin-top: 1px;
+      color: var(--pharma-orange);
+      font-size: 16px;
+    }
+
+    .pharma-alert-danger ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    /* Titre section */
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      text-transform: uppercase;
+    }
+
+    .form-section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 13px;
+    }
+
+    /* Formulaire */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .required-star {
+      color: var(--pharma-red);
+      font-weight: 800;
+    }
+
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfdfd;
+      color: var(--pharma-text);
+      font-size: 13px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .form-control:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus {
+      border-color: var(--pharma-primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--pharma-red);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .field-error ul {
+      margin: 0;
+      padding-left: 17px;
+    }
+
+    /* Bloc lecture seule */
+    .readonly-zone {
+      margin-top: 21px;
+      padding: 16px;
+      border: 1px solid #dce6e4;
+      border-radius: 11px;
+      background: #f8fafc;
+    }
+
+    .readonly-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 13px;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .readonly-title i {
+      color: var(--pharma-muted);
+    }
+
+    .readonly-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .readonly-item {
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .readonly-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .readonly-value {
+      display: block;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    /* Sidebar */
+    .medicament-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin-bottom: 16px;
+      padding: 13px;
+      border: 1px solid #b9ece3;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f0fdfa, #f5fbff);
+    }
+
+    .medicament-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 39px;
+      width: 39px;
+      height: 39px;
+      border-radius: 9px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+    }
+
+    .medicament-icon i {
+      font-size: 16px;
+    }
+
+    .medicament-banner h6 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .medicament-banner p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .summary-row:first-child {
+      padding-top: 0;
+    }
+
+    .summary-row:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .summary-label {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .summary-value {
+      max-width: 62%;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .status-badge i {
+      font-size: 8px;
+    }
+
+    .status-available {
+      background: var(--pharma-green-light);
+      color: #15803d;
+    }
+
+    .status-expired {
+      background: var(--pharma-red-light);
+      color: #b91c1c;
+    }
+
+    .status-empty {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    /* Boutons */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 25px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-back,
+    .btn-cancel,
+    .btn-save {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back {
+      border: 1px solid #d6e0de;
+      background: #ffffff;
+      color: #475569;
+    }
+
+    .btn-back:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-cancel {
+      border: 1px solid #fecaca;
+      background: #ffffff;
+      color: #b91c1c;
+    }
+
+    .btn-cancel:hover {
+      background: var(--pharma-red-light);
+      color: #991b1b;
+      text-decoration: none;
+    }
+
+    .btn-save {
+      min-width: 185px;
+      border: 0;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+      cursor: pointer;
+    }
+
+    .btn-save:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 17px rgba(15, 118, 110, 0.28);
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .stock-edit-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name {
+        display: none;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .edit-card-header,
+      .edit-card-body,
+      .info-card-header,
+      .info-card-body {
+        padding: 15px;
+      }
+
+      .readonly-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-back,
+      .btn-cancel,
+      .btn-save {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Navbar existante -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Sidebar existant -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- Entête page -->
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-edit"></i>
+              </div>
+
+              <div>
+                <h1>Modifier le lot de stock</h1>
+                <p>
+                  Modifiez les informations autorisées pour le lot
+                  <strong>{{ stock.numero_lot }}</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="stock-edit-container">
+              <div class="stock-edit-grid">
+
+                <!-- Formulaire -->
+                <div class="edit-card">
+                  <div class="edit-card-header">
+                    <h4>
+                      <i class="fas fa-pen"></i>
+                      Informations modifiables
+                    </h4>
+                  </div>
+
+                  <div class="edit-card-body">
+
+                    <!-- Messages Django -->
+                    {% if messages %}
+                      {% for message in messages %}
+                        {% if "success" in message.tags %}
+                          <div class="pharma-alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ message }}</span>
+                          </div>
+
+                        {% elif "error" in message.tags %}
+                          <div class="pharma-alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ message }}</span>
+                          </div>
+
+                        {% else %}
+                          <div class="pharma-alert-warning" role="alert">
+                            <i class="fas fa-info-circle"></i>
+                            <span>{{ message }}</span>
+                          </div>
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                      <div class="pharma-alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                          {{ form.non_field_errors }}
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    <div class="edit-warning">
+                      <i class="fas fa-info-circle"></i>
+
+                      <div>
+                        Vous pouvez modifier le numéro du lot, la date de péremption
+                        et le prix de vente. Les informations du médicament et les
+                        quantités restent protégées afin de préserver l’historique
+                        des mouvements de stock.
+                      </div>
+                    </div>
+
+                    <form method="post" novalidate>
+                      {% csrf_token %}
+
+                      {% for hidden_field in form.hidden_fields %}
+                        {{ hidden_field }}
+                      {% endfor %}
+
+                      <div class="form-section-title">
+                        <i class="fas fa-edit"></i>
+                        Modifier les informations du lot
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="{{ form.numero_lot.id_for_label }}">
+                              Numéro de lot
+
+                              {% if form.numero_lot.field.required %}
+                                <span class="required-star">*</span>
+                              {% endif %}
+                            </label>
+
+                            {{ form.numero_lot }}
+
+                            <small class="field-help">
+                              Le numéro doit être unique dans votre pharmacie.
+                            </small>
+
+                            {% if form.numero_lot.errors %}
+                              <div class="field-error">
+                                {{ form.numero_lot.errors }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="{{ form.date_peremption.id_for_label }}">
+                              Date de péremption
+
+                              {% if form.date_peremption.field.required %}
+                                <span class="required-star">*</span>
+                              {% endif %}
+                            </label>
+
+                            {{ form.date_peremption }}
+
+                            <small class="field-help">
+                              Cette date doit être postérieure à aujourd’hui.
+                            </small>
+
+                            {% if form.date_peremption.errors %}
+                              <div class="field-error">
+                                {{ form.date_peremption.errors }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-12">
+                          <div class="form-group">
+                            <label for="{{ form.prix_vente_piece.id_for_label }}">
+                              Prix de vente par pièce
+                              ({{ stock.devise }})
+
+                              {% if form.prix_vente_piece.field.required %}
+                                <span class="required-star">*</span>
+                              {% endif %}
+                            </label>
+
+                            {{ form.prix_vente_piece }}
+
+                            <small class="field-help">
+                              Modifiez le prix de vente appliqué à ce lot précis.
+                              Le prix d’achat reste inchangé dans l’historique.
+                            </small>
+
+                            {% if form.prix_vente_piece.errors %}
+                              <div class="field-error">
+                                {{ form.prix_vente_piece.errors }}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Informations non modifiables -->
+                      <div class="readonly-zone">
+                        <h6 class="readonly-title">
+                          <i class="fas fa-lock"></i>
+                          Informations protégées et non modifiables
+                        </h6>
+
+                        <div class="readonly-grid">
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Médicament
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.medicament.nom }}
+                              {% if stock.medicament.dosage %}
+                                - {{ stock.medicament.dosage }}
+                              {% endif %}
+                            </span>
+                          </div>
+
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Forme
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.medicament.get_forme_display }}
+                            </span>
+                          </div>
+
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Nombre de cartons
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.nombre_cartons }}
+                              carton{{ stock.nombre_cartons|pluralize }}
+                            </span>
+                          </div>
+
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Quantité initiale
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.quantite_piece|floatformat:0 }}
+                              pièce{{ stock.quantite_piece|pluralize }}
+                            </span>
+                          </div>
+
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Quantité restante
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.quantite_restante|floatformat:0 }}
+                              pièce{{ stock.quantite_restante|pluralize }}
+                            </span>
+                          </div>
+
+                          <div class="readonly-item">
+                            <span class="readonly-label">
+                              Prix achat / carton
+                            </span>
+
+                            <span class="readonly-value">
+                              {{ stock.prix_achat_carton|floatformat:2 }}
+                              {{ stock.devise }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-actions">
+                        <a
+                          href="{% url 'detail_stock' stock.id %}"
+                          class="btn-back"
+                        >
+                          <i class="fas fa-arrow-left"></i>
+                          Retour au détail
+                        </a>
+
+                        <a
+                          href="{% url 'detail_stock' stock.id %}"
+                          class="btn-cancel"
+                        >
+                          <i class="fas fa-times"></i>
+                          Annuler
+                        </a>
+
+                        <button
+                          type="submit"
+                          class="btn-save"
+                        >
+                          <i class="fas fa-save"></i>
+                          Enregistrer les modifications
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Informations lot -->
+                <aside>
+                  <div class="info-card">
+                    <div class="info-card-header">
+                      <h5>
+                        <i class="fas fa-box-open"></i>
+                        Lot concerné
+                      </h5>
+                    </div>
+
+                    <div class="info-card-body">
+                      <div class="medicament-banner">
+                        <div class="medicament-icon">
+                          <i class="fas fa-pills"></i>
+                        </div>
+
+                        <div>
+                          <h6>
+                            {{ stock.medicament.nom }}
+                          </h6>
+
+                          <p>
+                            {{ stock.medicament.dosage|default:"Sans dosage" }}
+                            · {{ stock.medicament.get_forme_display }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Numéro de lot actuel
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.numero_lot }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Pharmacie
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.pharmacie.nom_pharmacie }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Date d’achat
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.date_achat|date:"d/m/Y" }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Prix achat / pièce
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.prix_achat_piece|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Valeur achat totale
+                        </span>
+
+                        <span class="summary-value">
+                          {{ stock.valeur_totale_achat|floatformat:2 }}
+                          {{ stock.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Statut actuel
+                        </span>
+
+                        <span class="summary-value">
+                          {% if stock.quantite_restante == 0 %}
+                            <span class="status-badge status-empty">
+                              <i class="fas fa-circle"></i>
+                              Rupture
+                            </span>
+
+                          {% elif stock.est_perime %}
+                            <span class="status-badge status-expired">
+                              <i class="fas fa-circle"></i>
+                              Périmé
+                            </span>
+
+                          {% else %}
+                            <span class="status-badge status-available">
+                              <i class="fas fa-circle"></i>
+                              Disponible
+                            </span>
+                          {% endif %}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Enregistré par
+                        </span>
+
+                        <span class="summary-value">
+                          {% if stock.utilisateur.get_full_name %}
+                            {{ stock.utilisateur.get_full_name }}
+                          {% else %}
+                            {{ stock.utilisateur.username }}
+                          {% endif %}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts d'origine : garder cet ordre -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const formFields = document.querySelectorAll(
+        ".edit-card input, .edit-card select, .edit-card textarea"
+      );
+
+      formFields.forEach(function (field) {
+        if (
+          field.type !== "checkbox" &&
+          field.type !== "hidden" &&
+          field.type !== "submit"
+        ) {
+          field.classList.add("form-control");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
