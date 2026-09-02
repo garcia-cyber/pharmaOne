@@ -33,6 +33,7 @@
       --pharma-primary-light: #ccfbf1;
 
       --pharma-blue: #2563eb;
+      --pharma-blue-dark: #1d4ed8;
       --pharma-blue-light: #dbeafe;
 
       --pharma-green: #16a34a;
@@ -43,6 +44,9 @@
 
       --pharma-red: #dc2626;
       --pharma-red-light: #fee2e2;
+
+      --pharma-purple: #7c3aed;
+      --pharma-purple-light: #ede9fe;
 
       --pharma-bg: #f1f5f9;
       --pharma-card: #ffffff;
@@ -112,6 +116,14 @@
       font-weight: 500;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .pharmacie-name {
       display: inline-flex;
       align-items: center;
@@ -126,25 +138,78 @@
       white-space: nowrap;
     }
 
-    /* Bouton ajout */
+    .btn-header-action,
     .btn-add-stock {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      padding: 10px 14px;
-      border-radius: 8px;
+      gap: 6px;
+      min-height: 35px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header-action {
+      border: 1px solid #d6e0de;
+      background: #ffffff;
+      color: #475569;
+    }
+
+    .btn-header-action:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    .btn-header-action.blue {
+      border-color: #bfdbfe;
+      color: var(--pharma-blue-dark);
+    }
+
+    .btn-header-action.blue:hover {
+      border-color: var(--pharma-blue);
+      background: var(--pharma-blue-light);
+      color: var(--pharma-blue-dark);
+    }
+
+    .btn-header-action.orange {
+      border-color: #fde68a;
+      color: #a16207;
+    }
+
+    .btn-header-action.orange:hover {
+      border-color: var(--pharma-orange);
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .btn-header-action.red {
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .btn-header-action.red:hover {
+      border-color: var(--pharma-red);
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .btn-add-stock {
+      border: 0;
       background: linear-gradient(
         135deg,
         var(--pharma-primary-dark),
         var(--pharma-primary)
       );
       color: #ffffff;
-      font-size: 12px;
-      font-weight: 800;
-      text-decoration: none;
       box-shadow: 0 5px 12px rgba(15, 118, 110, 0.20);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .btn-add-stock:hover {
@@ -578,8 +643,8 @@
     }
 
     .btn-edit-stock {
-      color: var(--pharma-blue);
       border-color: #bfdbfe;
+      color: var(--pharma-blue);
     }
 
     .btn-edit-stock:hover {
@@ -700,6 +765,16 @@
       .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+
+      .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .header-actions {
+        justify-content: flex-start;
+        width: 100%;
+      }
     }
 
     @media (max-width: 991px) {
@@ -727,7 +802,6 @@
       }
 
       .section-header {
-        align-items: flex-start;
         min-height: auto;
         padding: 14px;
       }
@@ -743,6 +817,16 @@
 
       .section-header p {
         font-size: 11px;
+      }
+
+      .header-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .btn-header-action,
+      .btn-add-stock {
+        width: 100%;
       }
 
       .stats-grid {
@@ -796,8 +880,10 @@
     <div class="main-wrapper main-wrapper-1">
       <div class="navbar-bg"></div>
 
+      <!-- Header existant -->
       {% include "back-end/includes/header.html" %}
 
+      <!-- Sidebar existant -->
       <div class="main-sidebar sidebar-style-2">
         {% include "back-end/includes/aside.html" %}
       </div>
@@ -820,11 +906,47 @@
               </div>
             </div>
 
-            <div class="d-flex align-items-center" style="gap: 10px;">
+            <div class="header-actions">
               <div class="pharmacie-name">
                 <i class="fas fa-clinic-medical"></i>
                 {{ name_phar|default:"Pharmacie non définie" }}
               </div>
+
+              <a
+                href="{% url 'stock_par_medicament' %}"
+                class="btn-header-action blue"
+                title="Voir le stock regroupé par médicament"
+              >
+                <i class="fas fa-pills"></i>
+                Par médicament
+              </a>
+
+              <a
+                href="{% url 'historique_achat_stock' %}"
+                class="btn-header-action"
+                title="Voir l'historique des achats"
+              >
+                <i class="fas fa-history"></i>
+                Achats
+              </a>
+
+              <a
+                href="{% url 'liste_peremptions' %}"
+                class="btn-header-action orange"
+                title="Voir les lots proches de la péremption"
+              >
+                <i class="fas fa-calendar-times"></i>
+                Péremptions
+              </a>
+
+              <a
+                href="{% url 'liste_stock_faible' %}"
+                class="btn-header-action red"
+                title="Voir les médicaments avec stock faible"
+              >
+                <i class="fas fa-exclamation-triangle"></i>
+                Stock faible
+              </a>
 
               <a
                 href="{% url 'creer_stock' %}"
@@ -1086,7 +1208,6 @@
                         {% endif %}
                       </td>
 
-                      <!-- Boutons détail et modification -->
                       <td class="text-center">
                         <div class="action-buttons">
                           <a

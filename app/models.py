@@ -4,6 +4,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+from decimal import Decimal , ROUND_HALF_UP
 
 # Create your models here.
 
@@ -433,6 +434,15 @@ class Stock(models.Model):
 
         return Decimal('0.00')
 
+    @property
+    def jours_avant_peremption(self):
+        """
+        Nombre de jours restants avant péremption.
+        Négatif si déjà périmé (ex: -5 = périmé depuis 5 jours).
+        """
+        delta = self.date_peremption - timezone.localdate()
+        return delta.days
+
 # ===================================================================================
 # ===================================================================================
 class MouvementStock(models.Model):
@@ -440,9 +450,11 @@ class MouvementStock(models.Model):
     class TypeMouvement(models.TextChoices):
         ENTREE = 'ENTREE', 'Entrée (approvisionnement)'
         VENTE = 'VENTE', 'Sortie (vente)'
+        ANNULATION = 'ANNULATION', 'Annulation de vente'
         AJUSTEMENT = 'AJUSTEMENT', 'Ajustement manuel'
         PEREMPTION = 'PEREMPTION', 'Retrait pour péremption'
         PERTE = 'PERTE', 'Perte / casse'
+        RETOUR_CLIENT = "RETOUR_CLIENT", "Retour client"
 
     # Relations
     stock = models.ForeignKey(
@@ -502,3 +514,709 @@ class MouvementStock(models.Model):
             f"{self.medicament.nom} ({self.quantite} pièces) - "
             f"{self.date_mouvement.strftime('%d/%m/%Y %H:%M')}"
         )
+
+# ----------------------------------------------------------------------------------------------------
+# partie vente et ligne vente 
+class Vente(models.Model):
+
+    class StatutVente(models.TextChoices):
+        EN_ATTENTE = "EN_ATTENTE", "En attente de paiement"
+
+        PARTIELLEMENT_PAYEE = (
+            "PARTIELLEMENT_PAYEE",
+            "Partiellement payée"
+        )
+
+        PAYEE = "PAYEE", "Payée intégralement"
+
+        ANNULEE = "ANNULEE", "Annulée"
+
+    # =========================================================
+    # RELATIONS
+    # =========================================================
+    pharmacie = models.ForeignKey(
+        "Pharmacie",
+        on_delete=models.CASCADE,
+        related_name="ventes"
+    )
+
+    utilisateur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ventes_enregistrees"
+    )
+
+    # =========================================================
+    # CLIENT
+    # =========================================================
+    client_nom = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    client_telephone = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True
+    )
+
+    # =========================================================
+    # DEVISE
+    # =========================================================
+    devise = models.CharField(
+        max_length=3,
+        choices=[
+            ("CDF", "Franc Congolais"),
+            ("USD", "Dollar Américain"),
+        ],
+        default="CDF"
+    )
+
+    # =========================================================
+    # STATUT
+    # =========================================================
+    statut = models.CharField(
+        max_length=25,
+        choices=StatutVente.choices,
+        default=StatutVente.EN_ATTENTE
+    )
+
+    date_vente = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    notes = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        ordering = ["-date_vente"]
+        verbose_name = "Vente"
+        verbose_name_plural = "Ventes"
+
+    def __str__(self):
+        date = self.date_vente.strftime("%d/%m/%Y %H:%M")
+
+        return (
+            f"Vente #{self.pk} - "
+            f"{self.pharmacie.nom_pharmacie} - "
+            f"{date}"
+        )
+
+    # =========================================================
+    # MONTANT TOTAL APRÈS RETOURS PARTIELS
+    # =========================================================
+    @property
+    def montant_total(self):
+        """
+        Somme réellement due par le client.
+
+        Le calcul utilise sous_total_net :
+        quantité gardée par le client × prix unitaire.
+
+        Exemple :
+        Vendu : 4 pièces
+        Retourné : 2 pièces
+        Client garde : 2 pièces
+        """
+        return sum(
+            (
+                ligne.sous_total_net
+                for ligne in self.lignes.all()
+            ),
+            Decimal("0.00")
+        )
+
+    # =========================================================
+    # MONTANT DÉJÀ PAYÉ
+    #
+    # Tous les paiements sont déjà convertis dans la devise
+    # de la vente avec montant_equivalent_vente.
+    # =========================================================
+    @property
+    def montant_paye(self):
+        return sum(
+            (
+                paiement.montant_equivalent_vente
+                for paiement in self.paiements.all()
+            ),
+            Decimal("0.00")
+        )
+
+    # =========================================================
+    # RESTE À PAYER
+    # =========================================================
+    @property
+    def montant_restant(self):
+        """
+        Montant que le client doit encore payer.
+
+        Il ne sera jamais négatif.
+        Si le client a payé trop après un retour,
+        utilise montant_a_rembourser.
+        """
+        return max(
+            self.montant_total - self.montant_paye,
+            Decimal("0.00")
+        )
+
+    # =========================================================
+    # SOMME À REMBOURSER
+    # =========================================================
+    @property
+    def montant_a_rembourser(self):
+        """
+        Somme que la pharmacie doit rendre au client
+        si le client avait déjà trop payé avant le retour.
+
+        Exemple :
+        Total après retour : 10 000 CDF
+        Montant payé : 20 000 CDF
+        À rembourser : 10 000 CDF
+        """
+        return max(
+            self.montant_paye - self.montant_total,
+            Decimal("0.00")
+        )
+
+    # =========================================================
+    # VENTE SOLDÉE
+    # =========================================================
+    @property
+    def est_soldee(self):
+        """
+        Une vente est soldée seulement si :
+        - il ne reste rien à payer ;
+        - la pharmacie ne doit rien rembourser.
+
+        Si le client a payé trop,
+        la vente n'est pas complètement réglée tant que
+        le remboursement n'est pas traité.
+        """
+        return (
+            self.montant_restant <= Decimal("0.00") and
+            self.montant_a_rembourser <= Decimal("0.00")
+        )
+
+    # =========================================================
+    # MISE À JOUR DU STATUT
+    # =========================================================
+    def actualiser_statut(self):
+        """
+        Met à jour le statut après :
+        - ajout d'un paiement ;
+        - retour partiel ;
+        - remboursement futur.
+        """
+        if self.statut == self.StatutVente.ANNULEE:
+            return
+
+        total = self.montant_total
+        montant_paye = self.montant_paye
+        montant_restant = self.montant_restant
+        montant_a_rembourser = self.montant_a_rembourser
+
+        # Si tout le contenu est retourné,
+        # laisse la vente visible avec EN_ATTENTE.
+        # Tu peux aussi décider de la passer à ANNULEE
+        # avec une vue d'annulation complète.
+        if total <= Decimal("0.00"):
+            nouveau_statut = self.StatutVente.EN_ATTENTE
+
+        # Aucun paiement : le client a encore tout à payer.
+        elif montant_paye <= Decimal("0.00"):
+            nouveau_statut = self.StatutVente.EN_ATTENTE
+
+        # Client doit encore payer une partie.
+        elif montant_restant > Decimal("0.00"):
+            nouveau_statut = (
+                self.StatutVente.PARTIELLEMENT_PAYEE
+            )
+
+        # Le client a trop payé après un retour :
+        # on conserve PARTIELLEMENT_PAYEE tant que le
+        # remboursement n'est pas encore géré.
+        elif montant_a_rembourser > Decimal("0.00"):
+            nouveau_statut = (
+                self.StatutVente.PARTIELLEMENT_PAYEE
+            )
+
+        # Tout est payé exactement et aucun remboursement.
+        else:
+            nouveau_statut = self.StatutVente.PAYEE
+
+        if self.statut != nouveau_statut:
+            self.statut = nouveau_statut
+
+            self.save(
+                update_fields=["statut"]
+            )
+
+# ======================================================================
+# ======================================================================
+
+class LigneVente(models.Model):
+
+    # =========================================================
+    # RELATIONS
+    # =========================================================
+    vente = models.ForeignKey(
+        "Vente",
+        on_delete=models.CASCADE,
+        related_name="lignes"
+    )
+
+    medicament = models.ForeignKey(
+        "Medicament",
+        on_delete=models.PROTECT,
+        related_name="lignes_vente"
+    )
+
+    stock = models.ForeignKey(
+        "Stock",
+        on_delete=models.PROTECT,
+        related_name="lignes_vente",
+        help_text=(
+            "Lot précis utilisé pour la vente. "
+            "Il est choisi automatiquement avec FEFO."
+        )
+    )
+
+    # =========================================================
+    # QUANTITÉS
+    # =========================================================
+    quantite = models.PositiveIntegerField(
+        help_text="Quantité vendue au client."
+    )
+
+    quantite_retournee = models.PositiveIntegerField(
+        default=0,
+        help_text=(
+            "Quantité retournée par le client. "
+            "Elle ne peut pas dépasser la quantité vendue."
+        )
+    )
+
+    # =========================================================
+    # PRIX HISTORIQUE
+    # =========================================================
+    prix_unitaire = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        editable=False,
+        help_text=(
+            "Prix figé depuis le lot "
+            "au moment de la vente."
+        )
+    )
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Ligne de vente"
+        verbose_name_plural = "Lignes de vente"
+
+    def __str__(self):
+        return (
+            f"{self.medicament.nom} "
+            f"{self.medicament.dosage or ''} "
+            f"x{self.quantite} "
+            f"(retour : {self.quantite_retournee}) "
+            f"- Vente #{self.vente_id}"
+        )
+
+    # =========================================================
+    # QUANTITÉ QUE LE CLIENT GARDE
+    # =========================================================
+    @property
+    def quantite_gardee(self):
+        """
+        Quantité finale conservée par le client.
+
+        Exemple :
+        vendu = 4
+        retourné = 2
+        gardé = 2
+        """
+        return max(
+            self.quantite - self.quantite_retournee,
+            0
+        )
+
+    # =========================================================
+    # SOUS-TOTAL ORIGINAL
+    # =========================================================
+    @property
+    def sous_total(self):
+        """
+        Montant initial de la ligne avant retour.
+        """
+        return self.quantite * self.prix_unitaire
+
+    # =========================================================
+    # MONTANT DU RETOUR
+    # =========================================================
+    @property
+    def montant_retourne(self):
+        """
+        Valeur des produits retournés.
+
+        Exemple :
+        2 unités retournées × 5 000 CDF = 10 000 CDF.
+        """
+        return (
+            self.quantite_retournee *
+            self.prix_unitaire
+        )
+
+    # =========================================================
+    # SOUS-TOTAL NET
+    # =========================================================
+    @property
+    def sous_total_net(self):
+        """
+        Montant réellement dû après retour partiel.
+
+        Exemple :
+        vendu = 4
+        retourné = 2
+        prix = 5 000 CDF
+        net = 2 × 5 000 = 10 000 CDF.
+        """
+        return (
+            self.quantite_gardee *
+            self.prix_unitaire
+        )
+
+    # =========================================================
+    # VALIDATION
+    # =========================================================
+    def clean(self):
+        super().clean()
+
+        # Une ligne doit avoir un stock et un médicament.
+        if not self.stock_id or not self.medicament_id:
+            return
+
+        # Le lot doit correspondre au médicament.
+        if self.stock.medicament_id != self.medicament_id:
+            raise ValidationError(
+                "Le lot ne correspond pas au médicament vendu."
+            )
+
+        # Le lot doit appartenir à la même pharmacie.
+        if self.vente_id:
+            if (
+                self.stock.pharmacie_id !=
+                self.vente.pharmacie_id
+            ):
+                raise ValidationError(
+                    "Le lot ne provient pas de la pharmacie "
+                    "de cette vente."
+                )
+
+        # Une quantité retournée ne peut pas être supérieure
+        # à la quantité vendue.
+        if self.quantite_retournee > self.quantite:
+            raise ValidationError(
+                {
+                    "quantite_retournee": (
+                        "La quantité retournée ne peut pas dépasser "
+                        "la quantité vendue."
+                    )
+                }
+            )
+
+        # Les quantités vendues doivent être positives.
+        if self.quantite <= 0:
+            raise ValidationError(
+                {
+                    "quantite": (
+                        "La quantité vendue doit être "
+                        "supérieure à zéro."
+                    )
+                }
+            )
+
+        # Le lot ne doit pas être périmé au moment
+        # où il est choisi pour une nouvelle vente.
+        #
+        # Cette vérification ne bloque pas les anciennes ventes,
+        # car elles utilisent déjà un lot historique.
+        if (
+            self.pk is None and
+            self.stock.est_perime
+        ):
+            raise ValidationError(
+                "Le lot est périmé et ne peut pas être vendu."
+            )
+
+# =========================================================================
+# =========================================================================
+class PaiementVente(models.Model):
+
+    class ModePaiement(models.TextChoices):
+        ESPECES = "ESPECES", "Espèces"
+        MOBILE_MONEY = "MOBILE_MONEY", "Mobile Money"
+        CARTE = "CARTE", "Carte bancaire"
+        VIREMENT = "VIREMENT", "Virement bancaire"
+        AUTRE = "AUTRE", "Autre"
+
+    class DevisePaiement(models.TextChoices):
+        CDF = "CDF", "Franc Congolais"
+        USD = "USD", "Dollar Américain"
+
+    # =========================================================
+    # RELATIONS
+    # =========================================================
+    vente = models.ForeignKey(
+        "Vente",
+        on_delete=models.CASCADE,
+        related_name="paiements"
+    )
+
+    utilisateur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="paiements_ventes"
+    )
+
+    # =========================================================
+    # CE QUE LE CLIENT A RÉELLEMENT DONNÉ
+    # =========================================================
+    montant = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text=(
+            "Montant réellement remis par le client "
+            "dans la devise de paiement."
+        )
+    )
+
+    devise_paiement = models.CharField(
+        max_length=3,
+        choices=DevisePaiement.choices,
+        default=DevisePaiement.CDF,
+        help_text=(
+            "Devise réellement donnée par le client : CDF ou USD."
+        )
+    )
+
+    # =========================================================
+    # HISTORIQUE DE CONVERSION
+    # =========================================================
+    taux_usd_cdf_applique = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=(
+            "Taux archivé lors du paiement. "
+            "Exemple : 1 USD = 2300 CDF."
+        )
+    )
+
+    montant_equivalent_vente = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        editable=False,
+        help_text=(
+            "Montant du paiement converti dans la devise "
+            "de la vente. Utilisé pour calculer la dette."
+        )
+    )
+
+    # =========================================================
+    # INFORMATIONS COMPLÉMENTAIRES
+    # =========================================================
+    mode_paiement = models.CharField(
+        max_length=20,
+        choices=ModePaiement.choices,
+        default=ModePaiement.ESPECES
+    )
+
+    reference = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    note = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    date_paiement = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-date_paiement"]
+        verbose_name = "Paiement de vente"
+        verbose_name_plural = "Paiements de ventes"
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(montant__gt=0),
+                name="paiement_vente_montant_positif"
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"Paiement {self.montant} {self.devise_paiement} "
+            f"pour Vente #{self.vente_id}"
+        )
+
+    # =========================================================
+    # CONVERSION VERS LA DEVISE DE LA VENTE
+    # =========================================================
+    def calculer_equivalent_vente(self):
+        """
+        Retourne la valeur du paiement dans la devise de la vente.
+
+        Cas 1 :
+        Vente CDF, client paie CDF
+        5 000 CDF = 5 000 CDF
+
+        Cas 2 :
+        Vente CDF, client paie USD
+        10 USD × 2 300 = 23 000 CDF
+
+        Cas 3 :
+        Vente USD, client paie USD
+        10 USD = 10 USD
+
+        Cas 4 :
+        Vente USD, client paie CDF
+        23 000 CDF ÷ 2 300 = 10 USD
+        """
+        if not self.vente_id:
+            return Decimal("0.00")
+
+        devise_vente = self.vente.devise
+        devise_paiement = self.devise_paiement
+
+        # Même devise : aucune conversion.
+        if devise_vente == devise_paiement:
+            return self.montant.quantize(
+                Decimal("0.01"),
+                rounding=ROUND_HALF_UP
+            )
+
+        # Conversion nécessaire : taux obligatoire.
+        if (
+            self.taux_usd_cdf_applique is None or
+            self.taux_usd_cdf_applique <= Decimal("0.00")
+        ):
+            raise ValidationError(
+                {
+                    "taux_usd_cdf_applique": (
+                        "Un taux USD/CDF actif est obligatoire "
+                        "pour convertir ce paiement."
+                    )
+                }
+            )
+
+        # Client paie USD pour une vente en CDF.
+        if (
+            devise_vente == "CDF" and
+            devise_paiement == "USD"
+        ):
+            return (
+                self.montant *
+                self.taux_usd_cdf_applique
+            ).quantize(
+                Decimal("0.01"),
+                rounding=ROUND_HALF_UP
+            )
+
+        # Client paie CDF pour une vente en USD.
+        if (
+            devise_vente == "USD" and
+            devise_paiement == "CDF"
+        ):
+            return (
+                self.montant /
+                self.taux_usd_cdf_applique
+            ).quantize(
+                Decimal("0.01"),
+                rounding=ROUND_HALF_UP
+            )
+
+        raise ValidationError(
+            {
+                "devise_paiement": (
+                    "Combinaison de devises non prise en charge."
+                )
+            }
+        )
+
+    # =========================================================
+    # VALIDATION
+    # =========================================================
+    def clean(self):
+        super().clean()
+
+        if self.montant is None or self.montant <= Decimal("0.00"):
+            raise ValidationError(
+                {
+                    "montant": (
+                        "Le montant payé doit être supérieur à zéro."
+                    )
+                }
+            )
+
+        if not self.vente_id:
+            return
+
+        # Calculer le paiement dans la devise de la vente.
+        equivalent = self.calculer_equivalent_vente()
+
+        # Tous les paiements existants sont déjà enregistrés
+        # dans montant_equivalent_vente, donc ils sont comparables.
+        deja_paye = sum(
+            (
+                paiement.montant_equivalent_vente
+                for paiement in self.vente.paiements.exclude(
+                    pk=self.pk
+                )
+            ),
+            Decimal("0.00")
+        )
+
+        montant_restant = max(
+            self.vente.montant_total - deja_paye,
+            Decimal("0.00")
+        )
+
+        # Interdire de payer plus que le restant.
+        if equivalent > montant_restant:
+            raise ValidationError(
+                {
+                    "montant": (
+                        f"Paiement refusé. L'équivalent de ce paiement "
+                        f"est {equivalent} {self.vente.devise}, mais "
+                        f"le solde restant est seulement "
+                        f"{montant_restant} {self.vente.devise}."
+                    )
+                }
+            )
+
+    # =========================================================
+    # SAUVEGARDE
+    # =========================================================
+    def save(self, *args, **kwargs):
+        # Le taux et le montant converti deviennent un historique.
+        self.montant_equivalent_vente = (
+            self.calculer_equivalent_vente()
+        )
+
+        self.full_clean()
+
+        super().save(*args, **kwargs)
+
+        self.vente.actualiser_statut()

@@ -1,0 +1,1439 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>
+    Vente #{{ vente.id }} | {{ name_phar }}
+  </title>
+
+  <!-- CSS du thème -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  <!-- Include CSS original -->
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-purple: #7c3aed;
+      --pharma-purple-light: #ede9fe;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* ======================================================
+       ENTÊTE
+    ======================================================= */
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header-icon i {
+      font-size: 19px;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .btn-header {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 14px;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-header:hover {
+      border-color: var(--pharma-blue);
+      background: var(--pharma-blue-light);
+      color: #1e40af;
+      text-decoration: none;
+    }
+
+    /* ======================================================
+       STRUCTURE
+    ======================================================= */
+
+    .vente-container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .vente-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(295px, 0.72fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .vente-card,
+    .resume-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .vente-card-header,
+    .resume-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 21px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .vente-card-header h4,
+    .resume-card-header h5 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .vente-card-header h4 i,
+    .resume-card-header h5 i {
+      color: var(--pharma-primary);
+    }
+
+    .vente-card-body {
+      padding: 21px;
+    }
+
+    .resume-card-body {
+      padding: 17px;
+    }
+
+    /* ======================================================
+       BADGES
+    ======================================================= */
+
+    .sale-number,
+    .status-badge,
+    .quantity-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .sale-number {
+      padding: 7px 10px;
+      border: 1px solid #b9ece3;
+      background: #f0fdfa;
+      color: var(--pharma-primary-dark);
+    }
+
+    .status-badge {
+      padding: 7px 10px;
+      text-transform: uppercase;
+    }
+
+    .status-waiting {
+      border: 1px solid #fde68a;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .status-partial {
+      border: 1px solid #bfdbfe;
+      background: var(--pharma-blue-light);
+      color: #1e40af;
+    }
+
+    .status-paid {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .status-cancelled {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .quantity-badge {
+      min-width: 36px;
+      padding: 6px 9px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    /* ======================================================
+       INFORMATIONS
+    ======================================================= */
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 11px;
+      margin-bottom: 20px;
+    }
+
+    .info-item {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid #e4eceb;
+      border-radius: 9px;
+      background: #fbfdfd;
+    }
+
+    .info-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .info-label i {
+      margin-right: 4px;
+      color: var(--pharma-primary);
+    }
+
+    .info-value {
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .client-box {
+      margin-bottom: 22px;
+      padding: 15px;
+      border: 1px solid #ccece4;
+      border-radius: 10px;
+      background: #f4fffc;
+    }
+
+    .client-box-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 12px;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .client-item {
+      padding: 10px;
+      border: 1px solid #d8eae6;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .client-item-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .client-item-value {
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    /* ======================================================
+       TABLE MÉDICAMENTS
+    ======================================================= */
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 13px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .section-title h5 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .section-title h5 i {
+      color: var(--pharma-primary);
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e2ecea;
+      border-radius: 10px;
+    }
+
+    .sale-table {
+      width: 100%;
+      min-width: 760px;
+      margin: 0;
+      border-collapse: collapse;
+    }
+
+    .sale-table thead th {
+      padding: 12px 13px;
+      border-bottom: 1px solid #cfe2de;
+      background: #f1faf8;
+      color: var(--pharma-primary-dark);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sale-table tbody td {
+      padding: 13px;
+      border-bottom: 1px solid #edf2f7;
+      color: #334155;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    .sale-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .sale-table tbody tr:hover {
+      background: #fbfefd;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .line-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .medicine-name {
+      display: block;
+      color: #1e293b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .medicine-description {
+      display: block;
+      margin-top: 3px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .lot-info {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 7px 9px;
+      border: 1px solid #d8e8e5;
+      border-radius: 7px;
+      background: #fbfdfd;
+      color: #334155;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .lot-date {
+      color: var(--pharma-muted);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .money {
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .money-total {
+      color: var(--pharma-primary-dark);
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* ======================================================
+       NOTES
+    ======================================================= */
+
+    .notes-box {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid #ddd6fe;
+      border-left: 4px solid var(--pharma-purple);
+      border-radius: 9px;
+      background: #fafafa;
+    }
+
+    .notes-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 7px;
+      color: #5b21b6;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .notes-content {
+      margin: 0;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    /* ======================================================
+       RÉSUMÉ FINANCIER
+    ======================================================= */
+
+    .summary-total {
+      margin-bottom: 15px;
+      padding: 16px;
+      border: 1px solid #b9ece3;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f0fdfa, #f5fbff);
+      text-align: center;
+    }
+
+    .summary-total-label {
+      display: block;
+      color: #52716a;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .summary-total-value {
+      display: block;
+      margin-top: 6px;
+      color: var(--pharma-primary-dark);
+      font-size: 25px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .summary-row:last-child {
+      border-bottom: 0;
+    }
+
+    .summary-label {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .summary-value {
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .summary-value-green {
+      color: var(--pharma-green);
+    }
+
+    .summary-value-red {
+      color: var(--pharma-red);
+    }
+
+    /* ======================================================
+       PAIEMENTS
+    ======================================================= */
+
+    .payment-info {
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid #bfdbfe;
+      border-radius: 9px;
+      background: #eff6ff;
+    }
+
+    .payment-info-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .payment-info p {
+      margin: 5px 0 0;
+      color: #1e3a8a;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .payment-list {
+      margin-top: 15px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .payment-list-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .payment-list-item:last-child {
+      border-bottom: 0;
+    }
+
+    .payment-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .payment-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--pharma-green-light);
+      color: var(--pharma-green);
+      font-size: 12px;
+    }
+
+    .payment-main {
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .payment-small {
+      display: block;
+      margin-top: 2px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .payment-right {
+      color: var(--pharma-green);
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* ======================================================
+       BOUTONS
+    ======================================================= */
+
+    .detail-actions {
+      display: grid;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .detail-actions form {
+      margin: 0;
+    }
+
+    .btn-action,
+    .btn-action-primary,
+    .btn-action-reglement,
+    .btn-action-retour-partiel,
+    .btn-action-annuler {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-action {
+      border: 1px solid #d6e0de;
+      background: #ffffff;
+      color: #475569;
+    }
+
+    .btn-action:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-action-primary {
+      border: 0;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+    }
+
+    .btn-action-primary:hover {
+      color: #ffffff;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    .btn-action-reglement {
+      border: 1px solid #86efac;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .btn-action-reglement:hover {
+      border-color: var(--pharma-green);
+      background: #bbf7d0;
+      color: #14532d;
+      text-decoration: none;
+    }
+
+    /* Nouveau bouton : annulation partielle */
+    .btn-action-retour-partiel {
+      border: 1px solid #fcd34d;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .btn-action-retour-partiel:hover {
+      border-color: var(--pharma-orange);
+      background: #fde68a;
+      color: #78350f;
+      text-decoration: none;
+    }
+
+    .btn-action-annuler {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .btn-action-annuler:hover {
+      border-color: var(--pharma-red);
+      background: #fecaca;
+      color: #7f1d1d;
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    /* ======================================================
+       IMPRESSION
+    ======================================================= */
+
+    @media print {
+      .main-sidebar,
+      .navbar-bg,
+      .navbar,
+      .section-header,
+      .detail-actions,
+      .main-footer,
+      .no-print {
+        display: none !important;
+      }
+
+      .main-content,
+      .section {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      .vente-grid {
+        display: block;
+      }
+
+      .resume-card {
+        margin-top: 18px;
+      }
+
+      .vente-card,
+      .resume-card {
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .vente-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name {
+        display: none;
+      }
+
+      .header-actions,
+      .btn-header {
+        width: 100%;
+      }
+
+      .vente-card-header,
+      .vente-card-body,
+      .resume-card-header,
+      .resume-card-body {
+        padding: 15px;
+      }
+
+      .info-grid,
+      .client-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Include navbar -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Include sidebar -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- Entête -->
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-receipt"></i>
+              </div>
+
+              <div>
+                <h1>Vente #{{ vente.id }}</h1>
+
+                <p>
+                  Détail des médicaments, paiements et dette du client.
+                </p>
+              </div>
+            </div>
+
+            <div class="header-actions no-print">
+              <div class="pharmacie-name">
+                <i class="fas fa-clinic-medical"></i>
+                {{ name_phar|default:"Pharmacie non définie" }}
+              </div>
+
+              <a
+                href="{% url 'creer_vente' %}"
+                class="btn-header"
+              >
+                <i class="fas fa-plus-circle"></i>
+                Nouvelle vente
+              </a>
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="vente-container">
+              <div class="vente-grid">
+
+                <!-- Colonne gauche -->
+                <div>
+                  <div class="vente-card">
+
+                    <div class="vente-card-header">
+                      <h4>
+                        <i class="fas fa-file-invoice"></i>
+                        Informations de la vente
+                      </h4>
+
+                      <span class="sale-number">
+                        <i class="fas fa-hashtag"></i>
+                        Vente {{ vente.id }}
+                      </span>
+                    </div>
+
+                    <div class="vente-card-body">
+
+                      <div class="info-grid">
+                        <div class="info-item">
+                          <span class="info-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Date de vente
+                          </span>
+
+                          <span class="info-value">
+                            {{ vente.date_vente|date:"d/m/Y H:i" }}
+                          </span>
+                        </div>
+
+                        <div class="info-item">
+                          <span class="info-label">
+                            <i class="fas fa-user-shield"></i>
+                            Vendeur
+                          </span>
+
+                          <span class="info-value">
+                            {% if vente.utilisateur.get_full_name %}
+                              {{ vente.utilisateur.get_full_name }}
+                            {% else %}
+                              {{ vente.utilisateur.username }}
+                            {% endif %}
+                          </span>
+                        </div>
+
+                        <div class="info-item">
+                          <span class="info-label">
+                            <i class="fas fa-money-bill-wave"></i>
+                            Devise de vente
+                          </span>
+
+                          <span class="info-value">
+                            {{ vente.devise }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Client -->
+                      <div class="client-box">
+                        <h6 class="client-box-title">
+                          <i class="fas fa-user"></i>
+                          Informations client
+                        </h6>
+
+                        <div class="client-grid">
+                          <div class="client-item">
+                            <span class="client-item-label">
+                              Nom du client
+                            </span>
+
+                            <span class="client-item-value">
+                              {{ vente.client_nom|default:"Client non renseigné" }}
+                            </span>
+                          </div>
+
+                          <div class="client-item">
+                            <span class="client-item-label">
+                              Téléphone
+                            </span>
+
+                            <span class="client-item-value">
+                              {{ vente.client_telephone|default:"Non renseigné" }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Médicaments -->
+                      <div class="section-title">
+                        <h5>
+                          <i class="fas fa-pills"></i>
+                          Médicaments vendus
+                        </h5>
+
+                        <span class="sale-number">
+                          {{ nombre_lignes }} ligne{{ nombre_lignes|pluralize }}
+                        </span>
+                      </div>
+
+                      {% if lignes %}
+                        <div class="table-responsive">
+                          <table class="sale-table">
+                            <thead>
+                              <tr>
+                                <th class="text-center">#</th>
+                                <th>Médicament</th>
+                                <th>Lot FEFO</th>
+                                <th class="text-center">Qté</th>
+                                <th class="text-right">Prix unitaire</th>
+                                <th class="text-right">Sous-total</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {% for ligne in lignes %}
+                                <tr>
+                                  <td class="text-center">
+                                    <span class="line-number">
+                                      {{ forloop.counter }}
+                                    </span>
+                                  </td>
+
+                                  <td>
+                                    <span class="medicine-name">
+                                      {{ ligne.medicament.nom }}
+                                    </span>
+
+                                    <span class="medicine-description">
+                                      {{ ligne.medicament.dosage|default:"Dosage non précisé" }}
+                                      —
+                                      {{ ligne.medicament.get_forme_display }}
+                                    </span>
+                                  </td>
+
+                                  <td>
+                                    <span class="lot-info">
+                                      Lot : {{ ligne.stock.numero_lot }}
+
+                                      <span class="lot-date">
+                                        Exp. :
+                                        {{ ligne.stock.date_peremption|date:"d/m/Y" }}
+                                      </span>
+                                    </span>
+                                  </td>
+
+                                  <td class="text-center">
+                                    <span class="quantity-badge">
+                                      {{ ligne.quantite }}
+                                    </span>
+                                  </td>
+
+                                  <td class="text-right">
+                                    <span class="money">
+                                      {{ ligne.prix_unitaire|floatformat:2 }}
+                                      {{ vente.devise }}
+                                    </span>
+                                  </td>
+
+                                  <td class="text-right">
+                                    <span class="money-total">
+                                      {{ ligne.sous_total|floatformat:2 }}
+                                      {{ vente.devise }}
+                                    </span>
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      {% else %}
+                        <div class="pharma-alert-warning">
+                          <i class="fas fa-exclamation-triangle"></i>
+                          <span>
+                            Cette vente ne contient aucune ligne de médicament.
+                          </span>
+                        </div>
+                      {% endif %}
+
+                      <!-- Notes -->
+                      {% if vente.notes %}
+                        <div class="notes-box">
+                          <div class="notes-title">
+                            <i class="fas fa-sticky-note"></i>
+                            Notes de la vente
+                          </div>
+
+                          <p class="notes-content">
+                            {{ vente.notes }}
+                          </p>
+                        </div>
+                      {% endif %}
+
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Colonne droite -->
+                <aside>
+
+                  <!-- Résumé financier -->
+                  <div class="resume-card">
+                    <div class="resume-card-header">
+                      <h5>
+                        <i class="fas fa-calculator"></i>
+                        Résumé financier
+                      </h5>
+
+                      {% if vente.statut == "PAYEE" %}
+                        <span class="status-badge status-paid">
+                          <i class="fas fa-check-circle"></i>
+                          Payée
+                        </span>
+
+                      {% elif vente.statut == "PARTIELLEMENT_PAYEE" %}
+                        <span class="status-badge status-partial">
+                          <i class="fas fa-adjust"></i>
+                          Partielle
+                        </span>
+
+                      {% elif vente.statut == "ANNULEE" %}
+                        <span class="status-badge status-cancelled">
+                          <i class="fas fa-times-circle"></i>
+                          Annulée
+                        </span>
+
+                      {% else %}
+                        <span class="status-badge status-waiting">
+                          <i class="fas fa-clock"></i>
+                          En attente
+                        </span>
+                      {% endif %}
+                    </div>
+
+                    <div class="resume-card-body">
+                      <div class="summary-total">
+                        <span class="summary-total-label">
+                          Total de la vente
+                        </span>
+
+                        <span class="summary-total-value">
+                          {{ vente.montant_total|floatformat:2 }}
+                          {{ vente.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Nombre de lignes
+                        </span>
+
+                        <span class="summary-value">
+                          {{ nombre_lignes }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Quantité totale
+                        </span>
+
+                        <span class="summary-value">
+                          {{ total_quantite }} pièce{{ total_quantite|pluralize }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Payé dans la devise de vente
+                        </span>
+
+                        <span class="summary-value summary-value-green">
+                          {{ total_paye_equivalent|floatformat:2 }}
+                          {{ vente.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Reste à payer
+                        </span>
+
+                        <span class="summary-value summary-value-red">
+                          {{ reste_a_payer|floatformat:2 }}
+                          {{ vente.devise }}
+                        </span>
+                      </div>
+
+                      <div class="summary-row">
+                        <span class="summary-label">
+                          Statut
+                        </span>
+
+                        <span class="summary-value">
+                          {{ vente.get_statut_display }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Paiements reçus -->
+                  <div
+                    class="resume-card"
+                    style="margin-top: 18px;"
+                  >
+                    <div class="resume-card-header">
+                      <h5>
+                        <i class="fas fa-wallet"></i>
+                        Paiements reçus
+                      </h5>
+                    </div>
+
+                    <div class="resume-card-body">
+
+                      <div class="payment-info">
+                        <div class="payment-info-title">
+                          <i class="fas fa-coins"></i>
+                          Montants physiques encaissés
+                        </div>
+
+                        <p>
+                          CDF reçu :
+                          <strong>
+                            {{ total_recu_cdf|floatformat:2 }} CDF
+                          </strong>
+                        </p>
+
+                        <p>
+                          USD reçu :
+                          <strong>
+                            {{ total_recu_usd|floatformat:2 }} USD
+                          </strong>
+                        </p>
+                      </div>
+
+                      {% if paiements %}
+                        <ul class="payment-list">
+                          {% for paiement in paiements %}
+                            <li class="payment-list-item">
+                              <div class="payment-left">
+                                <span class="payment-icon">
+                                  <i class="fas fa-money-bill-wave"></i>
+                                </span>
+
+                                <div class="payment-main">
+                                  {{ paiement.get_mode_paiement_display }}
+
+                                  <span class="payment-small">
+                                    {{ paiement.date_paiement|date:"d/m/Y H:i" }}
+                                  </span>
+
+                                  {% if paiement.reference %}
+                                    <span class="payment-small">
+                                      Réf. : {{ paiement.reference }}
+                                    </span>
+                                  {% endif %}
+
+                                  {% if paiement.taux_usd_cdf_applique %}
+                                    <span class="payment-small">
+                                      Taux appliqué :
+                                      1 USD =
+                                      {{ paiement.taux_usd_cdf_applique|floatformat:2 }}
+                                      CDF
+                                    </span>
+                                  {% endif %}
+                                </div>
+                              </div>
+
+                              <div class="payment-right">
+                                {{ paiement.montant|floatformat:2 }}
+                                {{ paiement.devise_paiement }}
+
+                                <span class="payment-small">
+                                  Équiv. :
+                                  {{ paiement.montant_equivalent_vente|floatformat:2 }}
+                                  {{ vente.devise }}
+                                </span>
+                              </div>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <div
+                          class="pharma-alert-warning"
+                          style="margin-top: 15px;"
+                        >
+                          <i class="fas fa-clock"></i>
+                          <span>
+                            Aucun paiement n'a encore été enregistré.
+                          </span>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- Boutons -->
+                  <div class="detail-actions no-print">
+
+                    <button
+                      type="button"
+                      class="btn-action-primary"
+                      onclick="window.print();"
+                    >
+                      <i class="fas fa-print"></i>
+                      Imprimer la facture
+                    </button>
+
+                    {% if vente.montant_restant > 0 and vente.statut != "ANNULEE" %}
+                      <a
+                        href="{% url 'ajouter_reglement_vente' vente_id=vente.id %}"
+                        class="btn-action-reglement"
+                      >
+                        <i class="fas fa-money-bill-wave"></i>
+                        Enregistrer un règlement
+                      </a>
+                    {% endif %}
+
+                    <!-- Nouveau bouton : annulation / retour partiel -->
+                    {% if vente.statut != "ANNULEE" %}
+                      <a
+                        href="{% url 'retour_partiel_vente' vente_id=vente.id %}"
+                        class="btn-action-retour-partiel"
+                      >
+                        <i class="fas fa-undo"></i>
+                        Annuler partiellement
+                      </a>
+                    {% endif %}
+
+                    <!-- Bouton original : annulation totale -->
+                    {% if vente.statut != "ANNULEE" %}
+                      <form
+                        method="post"
+                        action="{% url 'annuler_vente' vente_id=vente.id %}"
+                        onsubmit="return confirm('Voulez-vous vraiment annuler cette vente complètement ? Le stock de tous les médicaments sera remis dans les lots concernés.');"
+                      >
+                        {% csrf_token %}
+
+                        <button
+                          type="submit"
+                          class="btn-action-annuler"
+                        >
+                          <i class="fas fa-times-circle"></i>
+                          Annuler la vente
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    <a
+                      href="{% url 'creer_vente' %}"
+                      class="btn-action"
+                    >
+                      <i class="fas fa-plus-circle"></i>
+                      Nouvelle vente
+                    </a>
+
+                    <a
+                      href="{% url 'liste_stock' %}"
+                      class="btn-action"
+                    >
+                      <i class="fas fa-boxes"></i>
+                      Voir le stock
+                    </a>
+                  </div>
+
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts du thème -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+</body>
+</html>

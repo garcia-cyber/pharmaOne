@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import *
+from django.utils.html import format_html
 
 # Register your models here.
 
@@ -331,3 +332,427 @@ class MouvementStockAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Empêche la suppression : garder une traçabilité complète et fiable."""
         return request.user.is_superuser
+
+
+# -------------------------------------------------------------------------------------------
+# vente et ligne vente 
+#
+# Ligne de vente (inline, affichée dans VenteAdmin)
+class LigneVenteInline(admin.TabularInline):
+    model = LigneVente
+    extra = 0
+    fields = ('medicament', 'stock', 'quantite', 'prix_unitaire', 'sous_total_affiche')
+    readonly_fields = ('sous_total_affiche',)
+    autocomplete_fields = ('medicament', 'stock')
+
+    def sous_total_affiche(self, obj):
+        if obj.pk:
+            return f"{obj.sous_total:,.2f}"
+        return "-"
+    sous_total_affiche.short_description = 'Sous-total'
+
+    def has_delete_permission(self, request, obj=None):
+        """Empêche la suppression d'une ligne déjà enregistrée : ça déséquilibrerait le stock."""
+        return False
+
+
+#
+# Vente
+@admin.register(Vente)
+class VenteAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'pharmacie',
+        'client_nom',
+        'statut',
+        'devise',
+        'montant_total_affiche',
+        'montant_paye_affiche',
+        'montant_restant_affiche',
+        'utilisateur',
+        'date_vente',
+    )
+    list_filter = (
+        'pharmacie',
+        'statut',
+        'devise',
+        'date_vente',
+    )
+    search_fields = (
+        'client_nom',
+        'client_telephone',
+        'id',
+    )
+    ordering = ('-date_vente',)
+    readonly_fields = (
+        'date_vente',
+        'montant_total_affiche',
+        'montant_paye_affiche',
+        'montant_restant_affiche',
+    )
+    autocomplete_fields = ('pharmacie', 'utilisateur')
+    inlines = [LigneVenteInline]
+
+    fieldsets = (
+        ('Client', {
+            'fields': ('client_nom', 'client_telephone')
+        }),
+        ('Vente', {
+            'fields': ('devise', 'statut', 'notes')
+        }),
+        ('Montants', {
+            'fields': ('montant_total_affiche', 'montant_paye_affiche', 'montant_restant_affiche')
+        }),
+        ('Relations', {
+            'fields': ('pharmacie', 'utilisateur')
+        }),
+        ('Métadonnées', {
+            'fields': ('date_vente',)
+        }),
+    )
+
+    def montant_total_affiche(self, obj):
+        return f"{obj.montant_total:,.2f} {obj.devise}"
+    montant_total_affiche.short_description = 'Montant total'
+
+    def montant_paye_affiche(self, obj):
+        return f"{obj.montant_paye:,.2f} {obj.devise}"
+    montant_paye_affiche.short_description = 'Montant payé'
+
+    def montant_restant_affiche(self, obj):
+        return f"{obj.montant_restant:,.2f} {obj.devise}"
+    montant_restant_affiche.short_description = 'Montant restant'
+
+    def get_queryset(self, request):
+        """Restreint la vue aux ventes de la pharmacie de l'utilisateur connecté (sauf superuser)."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+
+        pharmacie_obj = Pharmacie.objects.filter(user_pharmacie=request.user).first()
+        if pharmacie_obj:
+            return qs.filter(pharmacie=pharmacie_obj)
+        return qs.none()
+
+    def save_model(self, request, obj, form, change):
+        """Assigne automatiquement l'utilisateur connecté et sa pharmacie à la création."""
+        if not change:
+            obj.utilisateur = request.user
+            pharmacie_obj = Pharmacie.objects.filter(user_pharmacie=request.user).first()
+            if pharmacie_obj:
+                obj.pharmacie = pharmacie_obj
+        super().save_model(request, obj, form, change)
+
+    def get_readonly_fields(self, request, obj=None):
+        """Empêche un non-superuser de changer la pharmacie après coup."""
+        readonly = list(self.readonly_fields)
+        if not request.user.is_superuser:
+            readonly.append('pharmacie')
+        return readonly
+
+
+#
+# Ligne de vente (vue indépendante, en lecture seule pour consultation/recherche)
+@admin.register(LigneVente)
+class LigneVenteAdmin(admin.ModelAdmin):
+    list_display = (
+        'vente',
+        'medicament',
+        'stock',
+        'quantite',
+        'prix_unitaire',
+        'sous_total_affiche',
+    )
+    list_filter = (
+        'vente__pharmacie',
+    )
+    search_fields = (
+        'medicament__nom',
+        'stock__numero_lot',
+        'vente__id',
+    )
+    autocomplete_fields = ('vente', 'medicament', 'stock')
+
+    def sous_total_affiche(self, obj):
+        return f"{obj.sous_total:,.2f}"
+    sous_total_affiche.short_description = 'Sous-total'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+
+        pharmacie_obj = Pharmacie.objects.filter(user_pharmacie=request.user).first()
+        if pharmacie_obj:
+            return qs.filter(vente__pharmacie=pharmacie_obj)
+        return qs.none()
+
+    def has_add_permission(self, request):
+        """Empêche la création manuelle isolée : une ligne doit toujours être créée via une Vente (pour bien décrémenter le stock)."""
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Empêche la modification : changer une ligne après coup désynchroniserait quantite_restante et les mouvements de stock."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+# ==========================================================================
+# ==========================================================================
+@admin.register(PaiementVente)
+class PaiementVenteAdmin(admin.ModelAdmin):
+
+    # =========================================================
+    # COLONNES DANS LA LISTE DES PAIEMENTS
+    # =========================================================
+    list_display = (
+        "id",
+        "vente_numero",
+        "pharmacie",
+        "client",
+        "montant_affiche",
+        "devise",
+        "mode_paiement",
+        "utilisateur",
+        "date_paiement",
+    )
+
+    # =========================================================
+    # FILTRES À DROITE DANS L'ADMIN
+    # =========================================================
+    list_filter = (
+        "mode_paiement",
+        "date_paiement",
+        "vente__devise",
+        "vente__pharmacie",
+    )
+
+    # =========================================================
+    # BARRE DE RECHERCHE
+    # =========================================================
+    search_fields = (
+        "id",
+        "reference",
+        "note",
+        "vente__id",
+        "vente__client_nom",
+        "vente__client_telephone",
+        "vente__pharmacie__nom_pharmacie",
+        "utilisateur__username",
+        "utilisateur__first_name",
+        "utilisateur__last_name",
+    )
+
+    # =========================================================
+    # TRI PAR DÉFAUT
+    # =========================================================
+    ordering = (
+        "-date_paiement",
+    )
+
+    # =========================================================
+    # ÉVITE DES REQUÊTES INUTILES POUR vente, pharmacie et user
+    # =========================================================
+    list_select_related = (
+        "vente",
+        "vente__pharmacie",
+        "utilisateur",
+    )
+
+    # =========================================================
+    # CHAMPS MODIFIABLES DIRECTEMENT DANS LA LISTE
+    #
+    # Pour éviter les erreurs comptables, on ne rend aucun
+    # montant modifiable dans la liste.
+    # =========================================================
+    list_editable = ()
+
+    # =========================================================
+    # PAGE D'AJOUT / MODIFICATION
+    # =========================================================
+    fieldsets = (
+        (
+            "Paiement",
+            {
+                "fields": (
+                    "vente",
+                    "montant",
+                    "mode_paiement",
+                )
+            }
+        ),
+
+        (
+            "Informations complémentaires",
+            {
+                "fields": (
+                    "reference",
+                    "note",
+                )
+            }
+        ),
+
+        (
+            "Traçabilité",
+            {
+                "fields": (
+                    "utilisateur",
+                    "date_paiement",
+                )
+            }
+        ),
+    )
+
+    # date_paiement est créé automatiquement.
+    readonly_fields = (
+        "date_paiement",
+    )
+
+    # =========================================================
+    # MÉTHODES D'AFFICHAGE
+    # =========================================================
+    @admin.display(
+        description="Vente",
+        ordering="vente__id"
+    )
+    def vente_numero(self, obj):
+        return f"Vente #{obj.vente_id}"
+
+    @admin.display(
+        description="Pharmacie",
+        ordering="vente__pharmacie__nom_pharmacie"
+    )
+    def pharmacie(self, obj):
+        return obj.vente.pharmacie.nom_pharmacie
+
+    @admin.display(
+        description="Client",
+        ordering="vente__client_nom"
+    )
+    def client(self, obj):
+        if obj.vente.client_nom:
+            return obj.vente.client_nom
+
+        return "Client non renseigné"
+
+    @admin.display(
+        description="Devise",
+        ordering="vente__devise"
+    )
+    def devise(self, obj):
+        return obj.vente.devise
+
+    @admin.display(
+        description="Montant",
+        ordering="montant"
+    )
+    def montant_affiche(self, obj):
+        if obj.vente.devise == "USD":
+            couleur = "#2563eb"
+        else:
+            couleur = "#15803d"
+
+        return format_html(
+            '<strong style="color: {};">{} {}</strong>',
+            couleur,
+            obj.montant,
+            obj.vente.devise
+        )
+
+    # =========================================================
+    # À LA CRÉATION :
+    # L'UTILISATEUR CONNECTÉ DANS L'ADMIN DEVIENT LE CAISSIER.
+    # =========================================================
+    def save_model(self, request, obj, form, change):
+        if not obj.utilisateur_id:
+            obj.utilisateur = request.user
+
+        super().save_model(
+            request,
+            obj,
+            form,
+            change
+        )
+
+    # =========================================================
+    # APRÈS CRÉATION :
+    # on bloque la modification des éléments comptables.
+    #
+    # Un paiement ne devrait normalement pas être modifié.
+    # Si une erreur est commise, il vaut mieux créer un
+    # règlement inverse / annulation, selon tes règles métier.
+    # =========================================================
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return (
+                "vente",
+                "montant",
+                "mode_paiement",
+                "reference",
+                "note",
+                "utilisateur",
+                "date_paiement",
+            )
+
+        return (
+            "date_paiement",
+        )
+
+    # =========================================================
+    # L'UTILISATEUR CONNECTÉ EST IMPOSÉ À LA CRÉATION.
+    # Il n'apparaît donc pas comme champ à sélectionner.
+    # =========================================================
+    def get_fields(self, request, obj=None):
+        if obj is None:
+            return (
+                "vente",
+                "montant",
+                "mode_paiement",
+                "reference",
+                "note",
+                "date_paiement",
+            )
+
+        return super().get_fields(
+            request,
+            obj
+        )
+
+    # =========================================================
+    # L'utilisateur est automatiquement ajouté par save_model.
+    # Donc, il ne faut pas le demander lors de l'ajout.
+    # =========================================================
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return (
+                (
+                    "Paiement",
+                    {
+                        "fields": (
+                            "vente",
+                            "montant",
+                            "mode_paiement",
+                        )
+                    }
+                ),
+                (
+                    "Informations complémentaires",
+                    {
+                        "fields": (
+                            "reference",
+                            "note",
+                        )
+                    }
+                ),
+                (
+                    "Traçabilité",
+                    {
+                        "fields": (
+                            "date_paiement",
+                        )
+                    }
+                ),
+            )
+
+        return self.fieldsets

@@ -1,0 +1,1671 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>Nouvelle vente | {{ name_phar }}</title>
+
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  <!-- Include CSS original de ton projet -->
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .vente-container {
+      width: 100%;
+      max-width: 1050px;
+      margin: 0 auto;
+    }
+
+    .vente-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .vente-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 21px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .vente-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .vente-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .vente-card-body {
+      padding: 22px;
+    }
+
+    .required-info {
+      color: var(--pharma-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .required-star {
+      color: var(--pharma-red);
+      font-weight: 800;
+    }
+
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 22px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .form-section-title:first-child {
+      margin-top: 0;
+    }
+
+    .form-section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 13px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label,
+    .vente-line label {
+      display: block;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .form-control,
+    select,
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfdfd;
+      color: var(--pharma-text);
+      font-size: 13px;
+    }
+
+    .form-control:focus,
+    select:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--pharma-primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--pharma-red);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .field-error ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .pharma-alert-success,
+    .pharma-alert-danger,
+    .pharma-alert-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pharma-alert-success {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .pharma-alert-danger {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .pharma-alert-warning {
+      border: 1px solid #fde68a;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .vente-line {
+      margin-bottom: 14px;
+      padding: 15px;
+      border: 1px solid #dce6e4;
+      border-radius: 10px;
+      background: #ffffff;
+    }
+
+    .vente-line.is-deleted {
+      display: none;
+    }
+
+    .vente-line-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .vente-line-title {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .btn-remove-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 31px;
+      height: 31px;
+      border: 1px solid #fecaca;
+      border-radius: 7px;
+      background: #ffffff;
+      color: var(--pharma-red);
+      cursor: pointer;
+    }
+
+    .vente-line-grid {
+      display: grid;
+      grid-template-columns: minmax(250px, 2fr) 115px;
+      gap: 14px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 9px;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      color: var(--pharma-primary);
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .medicament-search-input {
+      padding-left: 36px !important;
+    }
+
+    .search-result-info {
+      display: none;
+      margin-top: 6px;
+      color: var(--pharma-primary-dark);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .search-result-info.is-visible {
+      display: block;
+    }
+
+    .vente-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    .detail-box {
+      min-height: 65px;
+      padding: 10px;
+      border: 1px solid #ccece4;
+      border-radius: 8px;
+      background: #f4fffc;
+    }
+
+    .detail-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      color: var(--pharma-primary-dark);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .detail-value.line-price {
+      color: #1d4ed8;
+    }
+
+    .detail-value.line-subtotal {
+      color: var(--pharma-green);
+    }
+
+    .detail-value.stock-error {
+      color: var(--pharma-red);
+    }
+
+    .btn-add-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      margin-top: 4px;
+      padding: 10px 13px;
+      border: 1px dashed var(--pharma-primary);
+      border-radius: 8px;
+      background: #f4fffc;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .resume-box {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 16px;
+      padding: 15px;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      background: #f8fbff;
+    }
+
+    .resume-item {
+      padding: 10px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .resume-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .resume-value {
+      color: #1e3a8a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .resume-value.paye {
+      color: var(--pharma-green);
+    }
+
+    .resume-value.dette {
+      color: var(--pharma-red);
+    }
+
+    .taux-info {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid #bfdbfe;
+      border-radius: 9px;
+      background: var(--pharma-blue-light);
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-retour {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border: 1px solid #d6e0de;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .btn-retour:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-save-sale {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 205px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+    }
+
+    .btn-save-sale:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .btn-save-sale:disabled,
+    .btn-add-line:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .vente-container {
+        max-width: 760px;
+      }
+
+      .vente-info-grid,
+      .resume-box {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name,
+      .required-info {
+        display: none;
+      }
+
+      .vente-card-header,
+      .vente-card-body {
+        padding: 15px;
+      }
+
+      .vente-line-grid,
+      .vente-info-grid,
+      .resume-box {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-retour,
+      .btn-save-sale {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Include navbar : conservé -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Include sidebar : conservé -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-cash-register"></i>
+              </div>
+
+              <div>
+                <h1>Nouvelle vente</h1>
+                <p>
+                  Médicament, stock et prix sont calculés automatiquement.
+                </p>
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="vente-container">
+              <div class="vente-card">
+
+                <div class="vente-card-header">
+                  <h4>
+                    <i class="fas fa-shopping-cart"></i>
+                    Enregistrer une vente
+                  </h4>
+
+                  <span class="required-info">
+                    <span class="required-star">*</span>
+                    Champs obligatoires
+                  </span>
+                </div>
+
+                <div class="vente-card-body">
+
+                  {% if messages %}
+                    {% for message in messages %}
+                      {% if "success" in message.tags %}
+                        <div class="pharma-alert-success">
+                          <i class="fas fa-check-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% elif "error" in message.tags %}
+                        <div class="pharma-alert-danger">
+                          <i class="fas fa-exclamation-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% else %}
+                        <div class="pharma-alert-warning">
+                          <i class="fas fa-info-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+
+                  {% if form.non_field_errors %}
+                    <div class="pharma-alert-danger">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <div>{{ form.non_field_errors }}</div>
+                    </div>
+                  {% endif %}
+
+                  {% if formset.non_form_errors %}
+                    <div class="pharma-alert-danger">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <div>{{ formset.non_form_errors }}</div>
+                    </div>
+                  {% endif %}
+
+                  <form method="post" id="vente-form" novalidate>
+                    {% csrf_token %}
+
+                    <div class="form-section-title">
+                      <i class="fas fa-user"></i>
+                      Client et paiement
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.client_nom.id_for_label }}">
+                            {{ form.client_nom.label }}
+                          </label>
+
+                          {{ form.client_nom }}
+
+                          {% if form.client_nom.errors %}
+                            <div class="field-error">
+                              {{ form.client_nom.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.client_telephone.id_for_label }}">
+                            {{ form.client_telephone.label }}
+                          </label>
+
+                          {{ form.client_telephone }}
+
+                          {% if form.client_telephone.errors %}
+                            <div class="field-error">
+                              {{ form.client_telephone.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="{{ form.devise.id_for_label }}">
+                            Devise de vente
+                            <span class="required-star">*</span>
+                          </label>
+
+                          {{ form.devise }}
+                        </div>
+                      </div>
+
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="{{ form.paiement_initial.id_for_label }}">
+                            Montant reçu
+                          </label>
+
+                          {{ form.paiement_initial }}
+
+                          <small class="field-help">
+                            Mettez 0 pour une dette.
+                          </small>
+                        </div>
+                      </div>
+
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="{{ form.devise_paiement.id_for_label }}">
+                            Devise reçue
+                          </label>
+
+                          {{ form.devise_paiement }}
+                        </div>
+                      </div>
+
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <label for="{{ form.mode_paiement.id_for_label }}">
+                            Mode de paiement
+                          </label>
+
+                          {{ form.mode_paiement }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="{{ form.notes.id_for_label }}">
+                        {{ form.notes.label }}
+                      </label>
+
+                      {{ form.notes }}
+                    </div>
+
+                    {{ formset.management_form }}
+
+                    <div class="form-section-title">
+                      <i class="fas fa-pills"></i>
+                      Médicaments vendus
+                    </div>
+
+                    <div id="lignes-vente-container">
+                      {% for ligne_form in formset %}
+                        <div class="vente-line">
+                          {% for hidden_field in ligne_form.hidden_fields %}
+                            {{ hidden_field }}
+                          {% endfor %}
+
+                          <div class="vente-line-header">
+                            <h6 class="vente-line-title">
+                              <i class="fas fa-capsules"></i>
+                              Médicament
+                            </h6>
+
+                            <button
+                              type="button"
+                              class="btn-remove-line"
+                              title="Supprimer cette ligne"
+                            >
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+
+                          <div class="vente-line-grid">
+                            <div class="form-group">
+                              <label>
+                                Rechercher le médicament
+                                <span class="required-star">*</span>
+                              </label>
+
+                              <div class="search-wrapper">
+                                <i class="fas fa-search"></i>
+
+                                <input
+                                  type="text"
+                                  class="form-control medicament-search-input"
+                                  placeholder="Nom, dosage ou forme..."
+                                  autocomplete="off"
+                                >
+                              </div>
+
+                              {{ ligne_form.medicament }}
+
+                              <span class="search-result-info"></span>
+
+                              {% if ligne_form.medicament.errors %}
+                                <div class="field-error">
+                                  {{ ligne_form.medicament.errors }}
+                                </div>
+                              {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                              <label for="{{ ligne_form.quantite.id_for_label }}">
+                                Quantité
+                                <span class="required-star">*</span>
+                              </label>
+
+                              {{ ligne_form.quantite }}
+
+                              {% if ligne_form.quantite.errors %}
+                                <div class="field-error">
+                                  {{ ligne_form.quantite.errors }}
+                                </div>
+                              {% endif %}
+                            </div>
+                          </div>
+
+                          <div class="vente-info-grid">
+                            <div class="detail-box">
+                              <span class="detail-label">Lot FEFO</span>
+                              <span class="detail-value line-lot">
+                                Sélectionnez un médicament
+                              </span>
+                            </div>
+
+                            <div class="detail-box">
+                              <span class="detail-label">Stock</span>
+                              <span class="detail-value line-stock">
+                                0 pièce
+                              </span>
+                            </div>
+
+                            <div class="detail-box">
+                              <span class="detail-label">Prix unitaire</span>
+                              <span class="detail-value line-price">
+                                0,00
+                              </span>
+                            </div>
+
+                            <div class="detail-box">
+                              <span class="detail-label">Sous-total</span>
+                              <span class="detail-value line-subtotal">
+                                0,00 CDF
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+
+                    <template id="ligne-vide-template">
+                      <div class="vente-line">
+                        {% for hidden_field in formset.empty_form.hidden_fields %}
+                          {{ hidden_field }}
+                        {% endfor %}
+
+                        <div class="vente-line-header">
+                          <h6 class="vente-line-title">
+                            <i class="fas fa-capsules"></i>
+                            Médicament
+                          </h6>
+
+                          <button
+                            type="button"
+                            class="btn-remove-line"
+                            title="Supprimer cette ligne"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+
+                        <div class="vente-line-grid">
+                          <div class="form-group">
+                            <label>
+                              Rechercher le médicament
+                              <span class="required-star">*</span>
+                            </label>
+
+                            <div class="search-wrapper">
+                              <i class="fas fa-search"></i>
+
+                              <input
+                                type="text"
+                                class="form-control medicament-search-input"
+                                placeholder="Nom, dosage ou forme..."
+                                autocomplete="off"
+                              >
+                            </div>
+
+                            {{ formset.empty_form.medicament }}
+
+                            <span class="search-result-info"></span>
+                          </div>
+
+                          <div class="form-group">
+                            <label for="{{ formset.empty_form.quantite.id_for_label }}">
+                              Quantité
+                              <span class="required-star">*</span>
+                            </label>
+
+                            {{ formset.empty_form.quantite }}
+                          </div>
+                        </div>
+
+                        <div class="vente-info-grid">
+                          <div class="detail-box">
+                            <span class="detail-label">Lot FEFO</span>
+                            <span class="detail-value line-lot">
+                              Sélectionnez un médicament
+                            </span>
+                          </div>
+
+                          <div class="detail-box">
+                            <span class="detail-label">Stock</span>
+                            <span class="detail-value line-stock">
+                              0 pièce
+                            </span>
+                          </div>
+
+                          <div class="detail-box">
+                            <span class="detail-label">Prix unitaire</span>
+                            <span class="detail-value line-price">
+                              0,00
+                            </span>
+                          </div>
+
+                          <div class="detail-box">
+                            <span class="detail-label">Sous-total</span>
+                            <span class="detail-value line-subtotal">
+                              0,00 CDF
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <button
+                      type="button"
+                      id="btn-ajouter-ligne"
+                      class="btn-add-line"
+                      {% if not pharmacie_obj %}disabled{% endif %}
+                    >
+                      <i class="fas fa-plus-circle"></i>
+                      Ajouter un médicament
+                    </button>
+
+                    <div class="form-section-title">
+                      <i class="fas fa-calculator"></i>
+                      Résumé de la vente
+                    </div>
+
+                    <div class="resume-box">
+                      <div class="resume-item">
+                        <span class="resume-label">Total vente</span>
+                        <span class="resume-value">
+                          <span id="montant-total">0,00</span>
+                          <span id="devise-total">CDF</span>
+                        </span>
+                      </div>
+
+                      <div class="resume-item">
+                        <span class="resume-label">Paiement reçu</span>
+                        <span class="resume-value paye">
+                          <span id="montant-recu">0,00</span>
+                          <span id="devise-recue">CDF</span>
+                        </span>
+                      </div>
+
+                      <div class="resume-item">
+                        <span class="resume-label">Équivalent payé</span>
+                        <span class="resume-value paye">
+                          <span id="montant-equivalent">0,00</span>
+                          <span id="devise-equivalent">CDF</span>
+                        </span>
+                      </div>
+
+                      <div class="resume-item">
+                        <span class="resume-label">Reste à payer</span>
+                        <span class="resume-value dette">
+                          <span id="montant-dette">0,00</span>
+                          <span id="devise-dette">CDF</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {% if taux_usd_cdf %}
+                      <div class="taux-info">
+                        <i class="fas fa-exchange-alt"></i>
+                        Taux de votre pharmacie :
+                        <strong>
+                          1 USD = {{ taux_usd_cdf|floatformat:2 }} CDF
+                        </strong>
+                        <br>
+                        <span id="conversion-info">
+                          La conversion du paiement apparaîtra ici.
+                        </span>
+                      </div>
+                    {% else %}
+                      <div class="pharma-alert-warning" style="margin-top: 14px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>
+                          Aucun taux USD/CDF actif n'est défini pour votre pharmacie.
+                          Les paiements dans une devise différente seront refusés.
+                        </span>
+                      </div>
+                    {% endif %}
+
+                    <div class="form-actions">
+                      <a
+                        href="{% url 'liste_stock' %}"
+                        class="btn-retour"
+                      >
+                        <i class="fas fa-arrow-left"></i>
+                        Retour au stock
+                      </a>
+
+                      <button
+                        type="submit"
+                        class="btn-save-sale"
+                        {% if not pharmacie_obj %}disabled{% endif %}
+                      >
+                        <i class="fas fa-check-circle"></i>
+                        Enregistrer la vente
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts du thème -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <!-- URL exacte de l'API médicament -->
+  <script>
+    const MEDICAMENT_API_URL =
+      "{% url 'api_medicament_vente' 999999 %}";
+
+    const TAUX_USD_CDF =
+      {% if taux_usd_cdf %}
+        Number("{{ taux_usd_cdf }}")
+      {% else %}
+        null
+      {% endif %};
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const container = document.getElementById(
+        "lignes-vente-container"
+      );
+
+      const template = document.getElementById(
+        "ligne-vide-template"
+      );
+
+      const addButton = document.getElementById(
+        "btn-ajouter-ligne"
+      );
+
+      const totalFormsInput = document.getElementById(
+        "id_{{ formset.prefix }}-TOTAL_FORMS"
+      );
+
+      const deviseVenteInput = document.getElementById(
+        "{{ form.devise.id_for_label }}"
+      );
+
+      const paiementInput = document.getElementById(
+        "{{ form.paiement_initial.id_for_label }}"
+      );
+
+      const devisePaiementInput = document.getElementById(
+        "{{ form.devise_paiement.id_for_label }}"
+      );
+
+      const totalElement = document.getElementById(
+        "montant-total"
+      );
+
+      const deviseTotalElement = document.getElementById(
+        "devise-total"
+      );
+
+      const montantRecuElement = document.getElementById(
+        "montant-recu"
+      );
+
+      const deviseRecueElement = document.getElementById(
+        "devise-recue"
+      );
+
+      const montantEquivalentElement = document.getElementById(
+        "montant-equivalent"
+      );
+
+      const deviseEquivalentElement = document.getElementById(
+        "devise-equivalent"
+      );
+
+      const montantDetteElement = document.getElementById(
+        "montant-dette"
+      );
+
+      const deviseDetteElement = document.getElementById(
+        "devise-dette"
+      );
+
+      const conversionInfo = document.getElementById(
+        "conversion-info"
+      );
+
+      function formaterMontant(valeur) {
+        const montant = Number(valeur || 0);
+
+        if (isNaN(montant)) {
+          return "0,00";
+        }
+
+        return montant.toLocaleString("fr-FR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function deviseVente() {
+        return deviseVenteInput && deviseVenteInput.value
+          ? deviseVenteInput.value
+          : "CDF";
+      }
+
+      function devisePaiement() {
+        return devisePaiementInput && devisePaiementInput.value
+          ? devisePaiementInput.value
+          : deviseVente();
+      }
+
+      function appliquerClasses(ligne) {
+        ligne.querySelectorAll(
+          "input, select, textarea"
+        ).forEach(function (field) {
+          if (
+            field.type !== "hidden" &&
+            field.type !== "checkbox"
+          ) {
+            field.classList.add("form-control");
+          }
+        });
+      }
+
+      function resetLigne(ligne) {
+        ligne.dataset.prix = "0";
+        ligne.dataset.stock = "0";
+        ligne.dataset.devise = deviseVente();
+
+        ligne.querySelector(".line-lot").textContent =
+          "Sélectionnez un médicament";
+
+        ligne.querySelector(".line-stock").textContent =
+          "0 pièce";
+
+        ligne.querySelector(".line-price").textContent =
+          "0,00";
+
+        ligne.querySelector(".line-subtotal").textContent =
+          "0,00 " + deviseVente();
+      }
+
+      function calculerSousTotal(ligne) {
+        const quantiteInput = ligne.querySelector(
+          ".quantite-input"
+        );
+
+        const quantite = Number(
+          quantiteInput ? quantiteInput.value : 0
+        );
+
+        const prix = Number(ligne.dataset.prix || 0);
+
+        const sousTotal = quantite * prix;
+
+        ligne.querySelector(".line-subtotal").textContent =
+          formaterMontant(sousTotal) +
+          " " +
+          (ligne.dataset.devise || deviseVente());
+
+        return sousTotal;
+      }
+
+      function filtrerMedicaments(ligne) {
+        const searchInput = ligne.querySelector(
+          ".medicament-search-input"
+        );
+
+        const select = ligne.querySelector(
+          ".medicament-select"
+        );
+
+        const info = ligne.querySelector(
+          ".search-result-info"
+        );
+
+        if (!searchInput || !select) {
+          return;
+        }
+
+        const recherche = searchInput.value
+          .trim()
+          .toLowerCase();
+
+        let total = 0;
+
+        Array.from(select.options).forEach(function (option) {
+          if (!option.value) {
+            option.hidden = false;
+            return;
+          }
+
+          const visible = (
+            recherche === "" ||
+            option.text.toLowerCase().includes(recherche)
+          );
+
+          option.hidden = !visible;
+
+          if (visible) {
+            total += 1;
+          }
+        });
+
+        if (recherche !== "") {
+          info.textContent = total + " médicament(s) trouvé(s).";
+          info.classList.add("is-visible");
+        } else {
+          info.textContent = "";
+          info.classList.remove("is-visible");
+        }
+      }
+
+      function verifierQuantite(ligne) {
+        const quantiteInput = ligne.querySelector(
+          ".quantite-input"
+        );
+
+        const stock = Number(ligne.dataset.stock || 0);
+        const quantite = Number(
+          quantiteInput ? quantiteInput.value : 0
+        );
+
+        if (quantiteInput && stock > 0 && quantite > stock) {
+          quantiteInput.setCustomValidity(
+            "Stock insuffisant : " +
+            stock +
+            " pièce(s) disponible(s)."
+          );
+        } else if (quantiteInput) {
+          quantiteInput.setCustomValidity("");
+        }
+      }
+
+      async function chargerMedicament(ligne) {
+        const select = ligne.querySelector(
+          ".medicament-select"
+        );
+
+        if (!select || !select.value) {
+          resetLigne(ligne);
+          calculerResume();
+          return;
+        }
+
+        ligne.querySelector(".line-lot").textContent =
+          "Chargement...";
+
+        const url = MEDICAMENT_API_URL.replace(
+          "999999",
+          select.value
+        );
+
+        try {
+          const response = await fetch(url);
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.message ||
+              "Médicament indisponible."
+            );
+          }
+
+          if (data.devise !== deviseVente()) {
+            throw new Error(
+              "Ce médicament est en " +
+              data.devise +
+              ". Vente configurée en " +
+              deviseVente() +
+              "."
+            );
+          }
+
+          ligne.dataset.prix = data.prix_vente_piece;
+          ligne.dataset.stock = data.stock_total;
+          ligne.dataset.devise = data.devise;
+
+          ligne.querySelector(".line-lot").textContent =
+            "Lot " +
+            data.fefo.numero_lot +
+            " | Exp. " +
+            data.fefo.date_peremption;
+
+          ligne.querySelector(".line-stock").textContent =
+            data.stock_total + " pièce(s)";
+
+          ligne.querySelector(".line-price").textContent =
+            formaterMontant(data.prix_vente_piece) +
+            " " +
+            data.devise;
+
+          const quantiteInput = ligne.querySelector(
+            ".quantite-input"
+          );
+
+          if (quantiteInput) {
+            quantiteInput.max = data.stock_total;
+          }
+
+          verifierQuantite(ligne);
+          calculerResume();
+
+        } catch (error) {
+          ligne.dataset.prix = "0";
+          ligne.dataset.stock = "0";
+
+          ligne.querySelector(".line-lot").textContent =
+            error.message;
+
+          ligne.querySelector(".line-stock").textContent =
+            "Indisponible";
+
+          ligne.querySelector(".line-stock").classList.add(
+            "stock-error"
+          );
+
+          ligne.querySelector(".line-price").textContent =
+            "0,00";
+
+          calculerResume();
+        }
+      }
+
+      function calculerEquivalentPaiement(montant) {
+        const deviseFacture = deviseVente();
+        const deviseReelle = devisePaiement();
+
+        if (montant <= 0) {
+          return 0;
+        }
+
+        if (deviseFacture === deviseReelle) {
+          return montant;
+        }
+
+        if (!TAUX_USD_CDF || TAUX_USD_CDF <= 0) {
+          return 0;
+        }
+
+        if (
+          deviseFacture === "CDF" &&
+          deviseReelle === "USD"
+        ) {
+          return montant * TAUX_USD_CDF;
+        }
+
+        if (
+          deviseFacture === "USD" &&
+          deviseReelle === "CDF"
+        ) {
+          return montant / TAUX_USD_CDF;
+        }
+
+        return 0;
+      }
+
+      function calculerResume() {
+        let total = 0;
+
+        container.querySelectorAll(
+          ".vente-line:not(.is-deleted)"
+        ).forEach(function (ligne) {
+          total += calculerSousTotal(ligne);
+        });
+
+        const montantRecu = Number(
+          paiementInput ? paiementInput.value : 0
+        );
+
+        const equivalent = calculerEquivalentPaiement(
+          montantRecu
+        );
+
+        const reste = Math.max(total - equivalent, 0);
+
+        totalElement.textContent = formaterMontant(total);
+        deviseTotalElement.textContent = deviseVente();
+
+        montantRecuElement.textContent =
+          formaterMontant(montantRecu);
+
+        deviseRecueElement.textContent = devisePaiement();
+
+        montantEquivalentElement.textContent =
+          formaterMontant(equivalent);
+
+        deviseEquivalentElement.textContent = deviseVente();
+
+        montantDetteElement.textContent =
+          formaterMontant(reste);
+
+        deviseDetteElement.textContent = deviseVente();
+
+        if (conversionInfo) {
+          if (devisePaiement() === deviseVente()) {
+            conversionInfo.textContent =
+              "Paiement dans la même devise : aucune conversion.";
+          } else if (TAUX_USD_CDF) {
+            conversionInfo.textContent =
+              formaterMontant(montantRecu) +
+              " " +
+              devisePaiement() +
+              " = " +
+              formaterMontant(equivalent) +
+              " " +
+              deviseVente() +
+              " au taux de 1 USD = " +
+              formaterMontant(TAUX_USD_CDF) +
+              " CDF.";
+          } else {
+            conversionInfo.textContent =
+              "Conversion impossible : taux USD/CDF absent.";
+          }
+        }
+      }
+
+      function preparerLigne(ligne) {
+        appliquerClasses(ligne);
+
+        const searchInput = ligne.querySelector(
+          ".medicament-search-input"
+        );
+
+        const medicamentSelect = ligne.querySelector(
+          ".medicament-select"
+        );
+
+        const quantiteInput = ligne.querySelector(
+          ".quantite-input"
+        );
+
+        const removeButton = ligne.querySelector(
+          ".btn-remove-line"
+        );
+
+        if (searchInput) {
+          searchInput.addEventListener(
+            "input",
+            function () {
+              filtrerMedicaments(ligne);
+            }
+          );
+        }
+
+        if (medicamentSelect) {
+          medicamentSelect.addEventListener(
+            "change",
+            function () {
+              chargerMedicament(ligne);
+            }
+          );
+        }
+
+        if (quantiteInput) {
+          quantiteInput.addEventListener(
+            "input",
+            function () {
+              verifierQuantite(ligne);
+              calculerResume();
+            }
+          );
+        }
+
+        if (removeButton) {
+          removeButton.addEventListener(
+            "click",
+            function () {
+              const deleteInput = ligne.querySelector(
+                'input[type="checkbox"][name$="-DELETE"]'
+              );
+
+              if (deleteInput) {
+                deleteInput.checked = true;
+              }
+
+              ligne.classList.add("is-deleted");
+
+              calculerResume();
+            }
+          );
+        }
+
+        if (medicamentSelect && medicamentSelect.value) {
+          chargerMedicament(ligne);
+        } else {
+          resetLigne(ligne);
+        }
+      }
+
+      function ajouterNouvelleLigne() {
+        const index = Number(totalFormsInput.value);
+
+        const html = template.innerHTML.replace(
+          /__prefix__/g,
+          index
+        );
+
+        const wrapper = document.createElement("div");
+
+        wrapper.innerHTML = html.trim();
+
+        const nouvelleLigne = wrapper.firstElementChild;
+
+        container.appendChild(nouvelleLigne);
+
+        totalFormsInput.value = index + 1;
+
+        preparerLigne(nouvelleLigne);
+
+        calculerResume();
+      }
+
+      addButton.addEventListener(
+        "click",
+        ajouterNouvelleLigne
+      );
+
+      if (paiementInput) {
+        paiementInput.addEventListener(
+          "input",
+          calculerResume
+        );
+      }
+
+      if (devisePaiementInput) {
+        devisePaiementInput.addEventListener(
+          "change",
+          calculerResume
+        );
+      }
+
+      if (deviseVenteInput) {
+        deviseVenteInput.addEventListener(
+          "change",
+          function () {
+            container.querySelectorAll(".vente-line").forEach(
+              function (ligne) {
+                const select = ligne.querySelector(
+                  ".medicament-select"
+                );
+
+                if (select && select.value) {
+                  chargerMedicament(ligne);
+                } else {
+                  resetLigne(ligne);
+                }
+              }
+            );
+
+            calculerResume();
+          }
+        );
+      }
+
+      container.querySelectorAll(".vente-line").forEach(
+        function (ligne) {
+          preparerLigne(ligne);
+        }
+      );
+
+      calculerResume();
+    });
+  </script>
+</body>
+</html>

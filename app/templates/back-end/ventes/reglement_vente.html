@@ -1,0 +1,1072 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"
+  >
+
+  <title>
+    Règlement vente #{{ vente.id }} | {{ name_phar }}
+  </title>
+
+  <!-- CSS de ton thème -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+
+  <link
+    rel="shortcut icon"
+    type="image/x-icon"
+    href="{% static 'back-end/assets/img/favicon.ico' %}"
+  >
+
+  <!-- Include style original -->
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    :root {
+      --pharma-primary: #0f766e;
+      --pharma-primary-dark: #115e59;
+      --pharma-primary-light: #ccfbf1;
+
+      --pharma-blue: #2563eb;
+      --pharma-blue-light: #dbeafe;
+
+      --pharma-green: #16a34a;
+      --pharma-green-light: #dcfce7;
+
+      --pharma-orange: #d97706;
+      --pharma-orange-light: #fef3c7;
+
+      --pharma-red: #dc2626;
+      --pharma-red-light: #fee2e2;
+
+      --pharma-bg: #f1f5f9;
+      --pharma-card: #ffffff;
+      --pharma-text: #1e293b;
+      --pharma-muted: #64748b;
+      --pharma-border: #dce6e4;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      background: var(--pharma-bg);
+    }
+
+    .section {
+      padding: 22px 18px 0;
+    }
+
+    /* ======================================================
+       ENTÊTE
+    ======================================================= */
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      margin-bottom: 20px;
+      padding: 16px 21px;
+      border: 1px solid #b9ece3;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-header-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--pharma-primary);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.22);
+    }
+
+    .section-header h1 {
+      margin: 0;
+      color: var(--pharma-primary-dark);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .section-header p {
+      margin: 4px 0 0;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .pharmacie-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid #bdece4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* ======================================================
+       CARTE PRINCIPALE
+    ======================================================= */
+
+    .reglement-container {
+      width: 100%;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .reglement-card {
+      overflow: hidden;
+      border: 1px solid var(--pharma-border);
+      border-radius: 14px;
+      background: var(--pharma-card);
+      box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .reglement-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 21px;
+      border-bottom: 1px solid #edf2f7;
+      background: #ffffff;
+    }
+
+    .reglement-card-header h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--pharma-text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .reglement-card-header h4 i {
+      color: var(--pharma-primary);
+    }
+
+    .vente-number {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border: 1px solid #b9ece3;
+      border-radius: 999px;
+      background: #f0fdfa;
+      color: var(--pharma-primary-dark);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .reglement-card-body {
+      padding: 22px;
+    }
+
+    /* ======================================================
+       ALERTES
+    ======================================================= */
+
+    .pharma-alert-danger,
+    .pharma-alert-warning,
+    .pharma-alert-success,
+    .pharma-alert-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .pharma-alert-danger {
+      border: 1px solid #fecaca;
+      background: var(--pharma-red-light);
+      color: #991b1b;
+    }
+
+    .pharma-alert-warning {
+      border: 1px solid #fde68a;
+      background: var(--pharma-orange-light);
+      color: #92400e;
+    }
+
+    .pharma-alert-success {
+      border: 1px solid #b7edcb;
+      background: var(--pharma-green-light);
+      color: #166534;
+    }
+
+    .pharma-alert-info {
+      border: 1px solid #bfdbfe;
+      background: var(--pharma-blue-light);
+      color: #1e40af;
+    }
+
+    .pharma-alert-danger ul,
+    .field-error ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    /* ======================================================
+       RÉSUMÉ VENTE
+    ======================================================= */
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+      color: var(--pharma-primary-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      text-transform: uppercase;
+    }
+
+    .section-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary);
+      font-size: 13px;
+    }
+
+    .resume-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 11px;
+      margin-bottom: 22px;
+    }
+
+    .resume-item {
+      padding: 12px;
+      border: 1px solid #dbeafe;
+      border-radius: 9px;
+      background: #f8fbff;
+    }
+
+    .resume-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--pharma-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .resume-value {
+      color: #1e3a8a;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .resume-value-green {
+      color: var(--pharma-green);
+    }
+
+    .resume-value-red {
+      color: var(--pharma-red);
+    }
+
+    .client-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 22px;
+      padding: 13px;
+      border: 1px solid #ccece4;
+      border-radius: 9px;
+      background: #f4fffc;
+    }
+
+    .client-box i {
+      margin-top: 2px;
+      color: var(--pharma-primary);
+      font-size: 16px;
+    }
+
+    .client-box strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--pharma-primary-dark);
+      font-size: 12px;
+    }
+
+    .client-box span {
+      color: #52716a;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ======================================================
+       FORMULAIRE
+    ======================================================= */
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .required-star {
+      color: var(--pharma-red);
+      font-weight: 800;
+    }
+
+    .form-control,
+    select,
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid #d8e3e1;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfdfd;
+      color: var(--pharma-text);
+      font-size: 13px;
+    }
+
+    .form-control:focus,
+    select:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--pharma-primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    textarea {
+      min-height: 75px;
+      resize: vertical;
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 5px;
+      color: var(--pharma-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .field-error {
+      margin-top: 6px;
+      color: var(--pharma-red);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* ======================================================
+       CONVERSION
+    ======================================================= */
+
+    .conversion-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 4px;
+      padding: 14px;
+      border: 1px solid #bfdbfe;
+      border-radius: 9px;
+      background: var(--pharma-blue-light);
+      color: #1e40af;
+    }
+
+    .conversion-box i {
+      margin-top: 2px;
+      color: var(--pharma-blue);
+      font-size: 16px;
+    }
+
+    .conversion-box h6 {
+      margin: 0 0 4px;
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .conversion-box p {
+      margin: 0;
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .conversion-value {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* ======================================================
+       ACTIONS
+    ======================================================= */
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .btn-retour,
+    .btn-save-reglement {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-retour {
+      border: 1px solid #d6e0de;
+      background: #ffffff;
+      color: #475569;
+    }
+
+    .btn-retour:hover {
+      border-color: var(--pharma-primary);
+      background: var(--pharma-primary-light);
+      color: var(--pharma-primary-dark);
+      text-decoration: none;
+    }
+
+    .btn-save-reglement {
+      min-width: 210px;
+      border: 0;
+      background: linear-gradient(
+        135deg,
+        var(--pharma-primary-dark),
+        var(--pharma-primary)
+      );
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, 0.2);
+    }
+
+    .btn-save-reglement:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .main-footer {
+      margin-top: 24px;
+      border-top: 1px solid var(--pharma-border);
+      background: #ffffff;
+      color: var(--pharma-muted);
+      font-size: 12px;
+    }
+
+    .main-footer a {
+      color: var(--pharma-primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 991px) {
+      .section {
+        padding: 18px 14px 0;
+      }
+
+      .reglement-container {
+        max-width: 760px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section {
+        padding: 14px 10px 0;
+      }
+
+      .section-header {
+        align-items: flex-start;
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .section-header h1 {
+        font-size: 17px;
+      }
+
+      .section-header p {
+        font-size: 11px;
+      }
+
+      .section-header-icon,
+      .pharmacie-name {
+        display: none;
+      }
+
+      .reglement-card-header,
+      .reglement-card-body {
+        padding: 15px;
+      }
+
+      .resume-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .btn-retour,
+      .btn-save-reglement {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      <!-- Include navbar original -->
+      {% include "back-end/includes/header.html" %}
+
+      <!-- Include sidebar original -->
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+
+          <!-- =================================================
+               ENTÊTE
+          ================================================== -->
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+
+              <div>
+                <h1>Règlement de la vente #{{ vente.id }}</h1>
+
+                <p>
+                  Enregistrez le paiement restant du client.
+                </p>
+              </div>
+            </div>
+
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="reglement-container">
+              <div class="reglement-card">
+
+                <div class="reglement-card-header">
+                  <h4>
+                    <i class="fas fa-cash-register"></i>
+                    Encaisser un règlement
+                  </h4>
+
+                  <span class="vente-number">
+                    <i class="fas fa-hashtag"></i>
+                    Vente {{ vente.id }}
+                  </span>
+                </div>
+
+                <div class="reglement-card-body">
+
+                  <!-- =================================================
+                       MESSAGES DJANGO
+                  ================================================== -->
+                  {% if messages %}
+                    {% for message in messages %}
+                      {% if "success" in message.tags %}
+                        <div class="pharma-alert-success">
+                          <i class="fas fa-check-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% elif "error" in message.tags %}
+                        <div class="pharma-alert-danger">
+                          <i class="fas fa-exclamation-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% else %}
+                        <div class="pharma-alert-warning">
+                          <i class="fas fa-info-circle"></i>
+                          <span>{{ message }}</span>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+
+                  {% if form.non_field_errors %}
+                    <div class="pharma-alert-danger">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <div>{{ form.non_field_errors }}</div>
+                    </div>
+                  {% endif %}
+
+                  <!-- =================================================
+                       RÉSUMÉ DE LA VENTE
+                  ================================================== -->
+                  <div class="section-title">
+                    <i class="fas fa-calculator"></i>
+                    Situation de la vente
+                  </div>
+
+                  <div class="resume-grid">
+                    <div class="resume-item">
+                      <span class="resume-label">
+                        Total de la vente
+                      </span>
+
+                      <span class="resume-value">
+                        {{ vente.montant_total|floatformat:2 }}
+                        {{ vente.devise }}
+                      </span>
+                    </div>
+
+                    <div class="resume-item">
+                      <span class="resume-label">
+                        Montant déjà payé
+                      </span>
+
+                      <span class="resume-value resume-value-green">
+                        {{ vente.montant_paye|floatformat:2 }}
+                        {{ vente.devise }}
+                      </span>
+                    </div>
+
+                    <div class="resume-item">
+                      <span class="resume-label">
+                        Reste à payer
+                      </span>
+
+                      <span class="resume-value resume-value-red">
+                        {{ vente.montant_restant|floatformat:2 }}
+                        {{ vente.devise }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Client -->
+                  <div class="client-box">
+                    <i class="fas fa-user"></i>
+
+                    <div>
+                      <strong>
+                        {{ vente.client_nom|default:"Client non renseigné" }}
+                      </strong>
+
+                      <span>
+                        Téléphone :
+                        {{ vente.client_telephone|default:"Non renseigné" }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- =================================================
+                       FORMULAIRE DE RÈGLEMENT
+                  ================================================== -->
+                  <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="section-title">
+                      <i class="fas fa-hand-holding-usd"></i>
+                      Nouveau paiement
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.montant.id_for_label }}">
+                            {{ form.montant.label }}
+                            <span class="required-star">*</span>
+                          </label>
+
+                          {{ form.montant }}
+
+                          <small class="field-help">
+                            Saisissez le montant réellement remis par le client.
+                          </small>
+
+                          {% if form.montant.errors %}
+                            <div class="field-error">
+                              {{ form.montant.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.devise_paiement.id_for_label }}">
+                            {{ form.devise_paiement.label }}
+                            <span class="required-star">*</span>
+                          </label>
+
+                          {{ form.devise_paiement }}
+
+                          <small class="field-help">
+                            CDF ou USD selon ce que le client remet réellement.
+                          </small>
+
+                          {% if form.devise_paiement.errors %}
+                            <div class="field-error">
+                              {{ form.devise_paiement.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.mode_paiement.id_for_label }}">
+                            {{ form.mode_paiement.label }}
+                            <span class="required-star">*</span>
+                          </label>
+
+                          {{ form.mode_paiement }}
+
+                          {% if form.mode_paiement.errors %}
+                            <div class="field-error">
+                              {{ form.mode_paiement.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="{{ form.reference.id_for_label }}">
+                            {{ form.reference.label }}
+                          </label>
+
+                          {{ form.reference }}
+
+                          <small class="field-help">
+                            Référence Mobile Money, banque ou carte, si disponible.
+                          </small>
+
+                          {% if form.reference.errors %}
+                            <div class="field-error">
+                              {{ form.reference.errors }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="{{ form.note.id_for_label }}">
+                        {{ form.note.label }}
+                      </label>
+
+                      {{ form.note }}
+
+                      {% if form.note.errors %}
+                        <div class="field-error">
+                          {{ form.note.errors }}
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    <!-- =================================================
+                         CONVERSION CDF / USD
+                    ================================================== -->
+                    {% if taux_usd_cdf %}
+                      <div class="conversion-box">
+                        <i class="fas fa-exchange-alt"></i>
+
+                        <div>
+                          <h6>Conversion selon le taux de la pharmacie</h6>
+
+                          <p>
+                            Taux actuel :
+                            <strong>
+                              1 USD =
+                              {{ taux_usd_cdf|floatformat:2 }}
+                              CDF
+                            </strong>
+                          </p>
+
+                          <span
+                            class="conversion-value"
+                            id="conversion-preview"
+                          >
+                            Saisissez un montant pour voir l'équivalent.
+                          </span>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="pharma-alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+
+                        <span>
+                          Aucun taux USD/CDF valide n'est enregistré pour cette
+                          pharmacie. Un paiement dans une devise différente de
+                          celle de la vente sera refusé.
+                        </span>
+                      </div>
+                    {% endif %}
+
+                    <!-- =================================================
+                         ACTIONS
+                    ================================================== -->
+                    <div class="form-actions">
+                      <a
+                        href="{% url 'detail_vente' vente_id=vente.id %}"
+                        class="btn-retour"
+                      >
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à la vente
+                      </a>
+
+                      <button
+                        type="submit"
+                        class="btn-save-reglement"
+                      >
+                        <i class="fas fa-check-circle"></i>
+                        Enregistrer le règlement
+                      </button>
+                    </div>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a>
+          — Gestion pharmaceutique
+        </div>
+
+        <div class="footer-right">
+          &copy; {% now "Y" %} — Tous droits réservés
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts originaux du thème -->
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+
+  <script>
+    const TAUX_USD_CDF =
+      {% if taux_usd_cdf %}
+        Number("{{ taux_usd_cdf }}")
+      {% else %}
+        null
+      {% endif %};
+
+    const DEVISE_VENTE = "{{ vente.devise }}";
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const formFields = document.querySelectorAll(
+        ".reglement-card input, .reglement-card select, .reglement-card textarea"
+      );
+
+      formFields.forEach(function (field) {
+        if (
+          field.type !== "hidden" &&
+          field.type !== "checkbox" &&
+          field.type !== "submit"
+        ) {
+          field.classList.add("form-control");
+        }
+      });
+
+      const montantInput = document.getElementById(
+        "{{ form.montant.id_for_label }}"
+      );
+
+      const devisePaiementInput = document.getElementById(
+        "{{ form.devise_paiement.id_for_label }}"
+      );
+
+      const conversionPreview = document.getElementById(
+        "conversion-preview"
+      );
+
+      const resteActuel = Number(
+        "{{ vente.montant_restant }}"
+      );
+
+      function formaterMontant(montant) {
+        const valeur = Number(montant || 0);
+
+        if (isNaN(valeur)) {
+          return "0,00";
+        }
+
+        return valeur.toLocaleString("fr-FR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function calculerEquivalent() {
+        if (
+          !montantInput ||
+          !devisePaiementInput ||
+          !conversionPreview
+        ) {
+          return;
+        }
+
+        const montant = Number(
+          montantInput.value || 0
+        );
+
+        const devisePaiement = devisePaiementInput.value;
+
+        if (montant <= 0) {
+          conversionPreview.textContent =
+            "Saisissez un montant pour voir l'équivalent.";
+
+          return;
+        }
+
+        let equivalent = montant;
+
+        if (devisePaiement === DEVISE_VENTE) {
+          conversionPreview.textContent =
+            formaterMontant(montant) +
+            " " +
+            devisePaiement +
+            " = " +
+            formaterMontant(montant) +
+            " " +
+            DEVISE_VENTE +
+            " (même devise).";
+
+          return;
+        }
+
+        if (!TAUX_USD_CDF || TAUX_USD_CDF <= 0) {
+          conversionPreview.textContent =
+            "Conversion impossible : aucun taux USD/CDF disponible.";
+
+          return;
+        }
+
+        if (
+          DEVISE_VENTE === "CDF" &&
+          devisePaiement === "USD"
+        ) {
+          equivalent = montant * TAUX_USD_CDF;
+        }
+
+        if (
+          DEVISE_VENTE === "USD" &&
+          devisePaiement === "CDF"
+        ) {
+          equivalent = montant / TAUX_USD_CDF;
+        }
+
+        const nouveauReste = Math.max(
+          resteActuel - equivalent,
+          0
+        );
+
+        conversionPreview.textContent =
+          formaterMontant(montant) +
+          " " +
+          devisePaiement +
+          " = " +
+          formaterMontant(equivalent) +
+          " " +
+          DEVISE_VENTE +
+          ". Nouveau reste estimé : " +
+          formaterMontant(nouveauReste) +
+          " " +
+          DEVISE_VENTE +
+          ".";
+      }
+
+      if (montantInput) {
+        montantInput.addEventListener(
+          "input",
+          calculerEquivalent
+        );
+      }
+
+      if (devisePaiementInput) {
+        devisePaiementInput.addEventListener(
+          "change",
+          calculerEquivalent
+        );
+      }
+
+      calculerEquivalent();
+    });
+  </script>
+</body>
+</html>
