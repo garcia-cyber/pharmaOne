@@ -1,10 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import  User 
 from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from decimal import Decimal
-from decimal import Decimal , ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP
 
 # Create your models here.
 
@@ -13,10 +11,21 @@ from decimal import Decimal , ROUND_HALF_UP
 #
 # creation de la class pharmacie pour chaque user puisse affiche les nom des sa pharmacie
 class Pharmacie(models.Model):
-    nom_pharmacie = models.CharField(max_length= 30)
-    user_pharmacie = models.ForeignKey(User , on_delete= models.SET_NULL , null = True , blank= True) 
-    dateCreation = models.DateField(auto_now_add= True)
+    nom_pharmacie = models.CharField(max_length=30)
+    user_pharmacie = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pharmacies",
+    )
+    dateCreation = models.DateField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["nom_pharmacie"]
+        indexes = [
+            models.Index(fields=["user_pharmacie"]),
+        ]
 
     def __str__(self):
         return self.nom_pharmacie
@@ -25,7 +34,7 @@ class Pharmacie(models.Model):
 #
 # creation de la type de role 
 class TypeRole(models.Model):
-    nom_typeRole = models.CharField(max_length= 40)
+    nom_typeRole = models.CharField(max_length=40, unique=True)
 
     def __str__(self):
         return self.nom_typeRole
@@ -34,14 +43,41 @@ class TypeRole(models.Model):
 #
 # creation de role dans le systeme 
 class Role(models.Model):
-    role = models.ForeignKey(TypeRole , on_delete= models.SET_NULL, null= True , blank= True, verbose_name= 'roleType')
-    userRole = models.ForeignKey(User , on_delete= models.SET_NULL, verbose_name= 'userRole', null= True)
-    pharmacie = models.ForeignKey(Pharmacie , on_delete= models.SET_NULL, verbose_name= 'pharmacieRole', null= True ) 
-    statut = models.CharField(max_length=10, default='active') 
+    role = models.ForeignKey(
+        TypeRole,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="roleType",
+    )
+    userRole = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        verbose_name="userRole",
+        null=True,
+        blank=True,
+        related_name="roles",
+    )
+    pharmacie = models.ForeignKey(
+        Pharmacie,
+        on_delete=models.SET_NULL,
+        verbose_name="pharmacieRole",
+        null=True,
+        blank=True,
+        related_name="roles",
+    )
+    statut = models.CharField(max_length=10, default="active")
 
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["userRole", "pharmacie", "role"],
+                name="unique_role_user_pharmacie_type",
+            ),
+        ]
+
     def __str__(self):
-        return self.statut
+        return f"{self.userRole} - {self.role} ({self.statut})"
 
 #
 #
@@ -61,8 +97,8 @@ class TauxChange(models.Model):
     )
     date_mise_a_jour = models.DateTimeField(auto_now=True)
     utilisateur = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         null=True,
         verbose_name='Utilisateur ayant défini le taux'
     )
@@ -82,7 +118,18 @@ class TauxChange(models.Model):
     
     def __str__(self):
         return f"{self.pharmacie.nom_pharmacie} - 1 USD = {self.taux_usd_cdf} CDF"
-    
+
+    def clean(self):
+        super().clean()
+        if self.taux_usd_cdf is not None and self.taux_usd_cdf <= Decimal("0.00"):
+            raise ValidationError({
+                "taux_usd_cdf": "Le taux doit être supérieur à zéro."
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
 
 #
 # medicament 
@@ -169,13 +216,55 @@ class Medicament(models.Model):
     date_modification = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('pharmacie', 'nom', 'dosage')
+        constraints = [
+            models.UniqueConstraint(
+                fields=("pharmacie", "nom", "dosage"),
+                name="unique_medicament_pharmacie_nom_dosage",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantite_par_carton__gt=0),
+                name="medicament_quantite_carton_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(prix_achat_carton__gt=0),
+                name="medicament_prix_achat_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(prix_vente_piece__gt=0),
+                name="medicament_prix_vente_positif",
+            ),
+        ]
         ordering = ['nom']
         verbose_name = "Médicament"
         verbose_name_plural = "Médicaments"
 
     def __str__(self):
         return f"{self.nom} {self.dosage or ''} - {self.get_forme_display()} ({self.pharmacie.nom_pharmacie})"
+
+    def clean(self):
+        super().clean()
+        if self.nom:
+            self.nom = self.nom.strip()
+        if self.dosage:
+            self.dosage = self.dosage.strip() or None
+        if (
+            self.quantite_par_carton and
+            self.prix_achat_carton is not None and
+            self.prix_vente_piece is not None and
+            self.prix_vente_piece <= (
+                self.prix_achat_carton / self.quantite_par_carton
+            )
+        ):
+            raise ValidationError({
+                "prix_vente_piece": (
+                    "Le prix de vente doit être supérieur au prix d'achat "
+                    "par pièce."
+                )
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     @property
     def prix_achat_piece(self):
@@ -308,6 +397,14 @@ class Stock(models.Model):
     def clean(self):
         super().clean()
 
+        if self.numero_lot:
+            self.numero_lot = self.numero_lot.strip()
+
+        if self.nombre_cartons is not None and self.nombre_cartons <= 0:
+            raise ValidationError({
+                "nombre_cartons": "Le nombre de cartons doit être supérieur à zéro."
+            })
+
         # Le médicament sélectionné doit appartenir à la pharmacie
         # affectée au stock.
         if self.medicament_id and self.pharmacie_id:
@@ -354,6 +451,11 @@ class Stock(models.Model):
         is_new = not self.pk
 
         if is_new:
+            if not self.medicament_id:
+                raise ValidationError(
+                    {"medicament": "Un médicament est obligatoire pour le stock."}
+                )
+
             # La pharmacie du stock est toujours celle du médicament.
             # Même si une valeur différente est envoyée depuis un formulaire,
             # le modèle impose la pharmacie correcte.
@@ -372,6 +474,9 @@ class Stock(models.Model):
 
             # À la création, tout le lot est disponible.
             self.quantite_restante = self.quantite_piece
+
+            # Les champs calculés doivent être cohérents avant l'insertion.
+            self.full_clean()
 
         super().save(*args, **kwargs)
 
@@ -507,6 +612,16 @@ class MouvementStock(models.Model):
         ordering = ['-date_mouvement']
         verbose_name = "Mouvement de stock"
         verbose_name_plural = "Mouvements de stock"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantite__gt=0),
+                name="mouvement_quantite_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantite_apres__gte=0),
+                name="mouvement_quantite_apres_non_negative",
+            ),
+        ]
 
     def __str__(self):
         return (
@@ -683,6 +798,53 @@ class Vente(models.Model):
         )
 
     # =========================================================
+    # COÛT ET BÉNÉFICE
+    # (remis depuis la version d'origine — supprimés par erreur
+    # par Cursor, mais utilisés par les vues de rapport)
+    # =========================================================
+    @property
+    def cout_total(self):
+        """
+        Somme du coût d'achat de tous les produits réellement
+        gardés par le client (hors quantités retournées).
+        """
+        return sum(
+            (
+                ligne.cout_total
+                for ligne in self.lignes.all()
+            ),
+            Decimal("0.00")
+        )
+
+    @property
+    def benefice_total(self):
+        """
+        Bénéfice brut de la vente = ce que le client doit - le coût.
+
+        Exemple :
+        montant_total = 10 000 CDF
+        cout_total = 6 000 CDF
+        benefice_total = 4 000 CDF
+        """
+        return self.montant_total - self.cout_total
+
+    @property
+    def marge_pourcentage(self):
+        """
+        Marge en pourcentage du chiffre d'affaires de cette vente.
+        """
+        if self.montant_total > Decimal("0.00"):
+            return (
+                self.benefice_total /
+                self.montant_total *
+                Decimal("100")
+            ).quantize(
+                Decimal("0.01"),
+                rounding=ROUND_HALF_UP
+            )
+        return Decimal("0.00")
+
+    # =========================================================
     # VENTE SOLDÉE
     # =========================================================
     @property
@@ -817,6 +979,20 @@ class LigneVente(models.Model):
         ordering = ["id"]
         verbose_name = "Ligne de vente"
         verbose_name_plural = "Lignes de vente"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantite__gt=0),
+                name="ligne_vente_quantite_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantite_retournee__gte=0),
+                name="ligne_vente_retour_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantite_retournee__lte=models.F("quantite")),
+                name="ligne_vente_retour_max_quantite",
+            ),
+        ]
 
     def __str__(self):
         return (
@@ -891,12 +1067,78 @@ class LigneVente(models.Model):
         )
 
     # =========================================================
+    # COÛT ET BÉNÉFICE
+    # (remis depuis la version d'origine — supprimés par erreur
+    # par Cursor, mais utilisés par les vues de rapport)
+    # =========================================================
+    @property
+    def cout_unitaire(self):
+        """
+        Coût d'achat d'une pièce, hérité du lot (stock) utilisé.
+        """
+        return self.stock.prix_achat_piece
+
+    @property
+    def cout_total(self):
+        """
+        Coût total pour la quantité réellement gardée par le client.
+
+        Exemple :
+        gardé = 2
+        coût unitaire = 3 000 CDF
+        coût total = 6 000 CDF
+        """
+        return (
+            self.cout_unitaire *
+            self.quantite_gardee
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+
+    @property
+    def benefice(self):
+        """
+        Bénéfice net de cette ligne = ce qui est dû - ce que ça a coûté.
+
+        Exemple :
+        sous_total_net = 10 000 CDF
+        cout_total = 6 000 CDF
+        bénéfice = 4 000 CDF
+        """
+        return (
+            self.sous_total_net -
+            self.cout_total
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+
+    # =========================================================
     # VALIDATION
     # =========================================================
     def clean(self):
         super().clean()
 
-        # Une ligne doit avoir un stock et un médicament.
+        if self.quantite is not None and self.quantite <= 0:
+            raise ValidationError({
+                "quantite": "La quantité vendue doit être supérieure à zéro."
+            })
+
+        if (
+            self.quantite_retournee is not None and
+            self.quantite is not None and
+            self.quantite_retournee > self.quantite
+        ):
+            raise ValidationError({
+                "quantite_retournee": (
+                    "La quantité retournée ne peut pas dépasser "
+                    "la quantité vendue."
+                )
+            })
+
+        # Une ligne doit avoir un stock et un médicament pour vérifier
+        # la cohérence entre le lot, le médicament et la pharmacie.
         if not self.stock_id or not self.medicament_id:
             return
 
@@ -917,29 +1159,6 @@ class LigneVente(models.Model):
                     "de cette vente."
                 )
 
-        # Une quantité retournée ne peut pas être supérieure
-        # à la quantité vendue.
-        if self.quantite_retournee > self.quantite:
-            raise ValidationError(
-                {
-                    "quantite_retournee": (
-                        "La quantité retournée ne peut pas dépasser "
-                        "la quantité vendue."
-                    )
-                }
-            )
-
-        # Les quantités vendues doivent être positives.
-        if self.quantite <= 0:
-            raise ValidationError(
-                {
-                    "quantite": (
-                        "La quantité vendue doit être "
-                        "supérieure à zéro."
-                    )
-                }
-            )
-
         # Le lot ne doit pas être périmé au moment
         # où il est choisi pour une nouvelle vente.
         #
@@ -952,6 +1171,20 @@ class LigneVente(models.Model):
             raise ValidationError(
                 "Le lot est périmé et ne peut pas être vendu."
             )
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        if is_new:
+            if not self.stock_id:
+                raise ValidationError(
+                    {"stock": "Un lot de stock est obligatoire."}
+                )
+            if not self.prix_unitaire:
+                self.prix_unitaire = self.stock.prix_vente_piece
+            self.full_clean()
+
+        return super().save(*args, **kwargs)
 
 # =========================================================================
 # =========================================================================
@@ -1172,6 +1405,36 @@ class PaiementVente(models.Model):
 
         if not self.vente_id:
             return
+
+        devise_vente = self.vente.devise
+
+        # Une conversion est nécessaire : le taux appliqué doit
+        # obligatoirement correspondre au taux actif de la pharmacie,
+        # pour éviter qu'un taux périmé ou saisi manuellement de travers
+        # ne soit utilisé.
+        if devise_vente != self.devise_paiement:
+            taux_change = getattr(self.vente.pharmacie, 'taux_change', None)
+
+            if taux_change is None or not taux_change.est_actif:
+                raise ValidationError({
+                    'taux_usd_cdf_applique': (
+                        "Aucun taux de change actif n'est défini pour "
+                        "cette pharmacie. Impossible de convertir ce paiement."
+                    )
+                })
+
+            if self.taux_usd_cdf_applique is None:
+                # Pas de taux fourni : on applique automatiquement
+                # le taux actif de la pharmacie.
+                self.taux_usd_cdf_applique = taux_change.taux_usd_cdf
+            elif self.taux_usd_cdf_applique != taux_change.taux_usd_cdf:
+                raise ValidationError({
+                    'taux_usd_cdf_applique': (
+                        f"Le taux fourni ({self.taux_usd_cdf_applique}) ne "
+                        f"correspond pas au taux actif de la pharmacie "
+                        f"({taux_change.taux_usd_cdf})."
+                    )
+                })
 
         # Calculer le paiement dans la devise de la vente.
         equivalent = self.calculer_equivalent_vente()

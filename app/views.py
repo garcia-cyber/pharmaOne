@@ -12,6 +12,8 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 
 
@@ -1929,20 +1931,18 @@ def creer_vente(request):
 
                         # Si le paiement est dans une devise
                         # différente de celle de la facture :
-                        # récupérer et verrouiller le taux de cette
+                        # récupérer et verrouiller le taux ACTIF de cette
                         # pharmacie pour l'archiver dans le paiement.
                         if devise_paiement != vente.devise:
-                            try:
-                                taux_obj = (
-                                    TauxChange.objects
-                                    .select_for_update()
-                                    .get(
-                                        pharmacie=pharmacie_obj
-                                    )
+                            taux_obj = (
+                                TauxChange.objects
+                                .select_for_update()
+                                .filter(
+                                    pharmacie=pharmacie_obj,
+                                    est_actif=True
                                 )
-
-                            except TauxChange.DoesNotExist:
-                                taux_obj = None
+                                .first()
+                            )
 
                             if (
                                 taux_obj is None or
@@ -1951,7 +1951,7 @@ def creer_vente(request):
                             ):
                                 raise ValueError(
                                     "Paiement impossible : aucun "
-                                    "taux USD/CDF valide n'est "
+                                    "taux USD/CDF actif n'est "
                                     "enregistré pour cette pharmacie."
                                 )
 
@@ -2411,22 +2411,20 @@ def ajouter_reglement_vente(request, vente_id):
                     reglement.utilisateur = request.user
 
                     # Si le client paie dans une autre devise
-                    # que la vente, récupérer le taux de la pharmacie.
+                    # que la vente, récupérer le taux ACTIF de la pharmacie.
                     if (
                         reglement.devise_paiement !=
                         vente_verrouillee.devise
                     ):
-                        try:
-                            taux_obj = (
-                                TauxChange.objects
-                                .select_for_update()
-                                .get(
-                                    pharmacie=pharmacie_obj
-                                )
+                        taux_obj = (
+                            TauxChange.objects
+                            .select_for_update()
+                            .filter(
+                                pharmacie=pharmacie_obj,
+                                est_actif=True
                             )
-
-                        except TauxChange.DoesNotExist:
-                            taux_obj = None
+                            .first()
+                        )
 
                         if (
                             taux_obj is None or
@@ -2434,7 +2432,7 @@ def ajouter_reglement_vente(request, vente_id):
                             taux_obj.taux_usd_cdf <= Decimal("0.00")
                         ):
                             raise ValueError(
-                                "Aucun taux USD/CDF valide n'est "
+                                "Aucun taux USD/CDF actif n'est "
                                 "enregistré pour cette pharmacie."
                             )
 
@@ -2532,7 +2530,6 @@ def ajouter_reglement_vente(request, vente_id):
             "taux_usd_cdf": taux_usd_cdf,
         }
     )
-
 
 # --------------------------------------------------------------------------------------
 #  LISTE DES VENTES 
@@ -3230,3 +3227,348 @@ def retour_partiel_vente(request, vente_id):
             "roles": roles,
         }
     )
+
+
+# ----------------------------------------------------------------------------------------------------------
+# RAPPORT FINANCIER
+# ----------------------------------------------------------------------------------------------------------
+@login_required
+def rapport_benefice(request):
+    """
+    Affiche le bénéfice (chiffre d'affaires, coût, bénéfice net)
+    sur une période donnée, pour la pharmacie de l'utilisateur connecté.
+    """
+
+    pharmacie = get_object_or_404(
+        Pharmacie, user_pharmacie=request.user
+    )
+
+    # ---------------------------------------------------------
+    # Rôles de l'utilisateur (même logique que dashboard)
+    # ---------------------------------------------------------
+    role_verify = Role.objects.filter(userRole=request.user).select_related('role')
+    roles = [r.role.nom_typeRole for r in role_verify if r.role]
+
+    if 'super admin' in roles:
+        primary_role = 'super admin'
+    elif 'admin' in roles:
+        primary_role = 'admin'
+    else:
+        primary_role = 'visiteur'
+
+    devise = request.GET.get('devise', 'CDF')
+    periode = request.GET.get('periode', 'mois')
+
+    aujourdhui = timezone.localdate()
+
+    if periode == 'jour':
+        date_debut = date_fin = aujourdhui
+    elif periode == 'semaine':
+        date_debut = aujourdhui - timedelta(days=aujourdhui.weekday())
+        date_fin = aujourdhui
+    elif periode == 'personnalise':
+        try:
+            date_debut = datetime.strptime(
+                request.GET.get('date_debut', ''), '%Y-%m-%d'
+            ).date()
+            date_fin = datetime.strptime(
+                request.GET.get('date_fin', ''), '%Y-%m-%d'
+            ).date()
+        except ValueError:
+            date_debut = aujourdhui.replace(day=1)
+            date_fin = aujourdhui
+    else:
+        date_debut = aujourdhui.replace(day=1)
+        date_fin = aujourdhui
+
+    ventes = (
+        Vente.objects
+        .filter(
+            pharmacie=pharmacie,
+            devise=devise,
+            date_vente__date__gte=date_debut,
+            date_vente__date__lte=date_fin,
+        )
+        .exclude(statut=Vente.StatutVente.ANNULEE)
+        .prefetch_related('lignes', 'lignes__stock')
+    )
+
+    chiffre_affaires = Decimal('0.00')
+    cout_total = Decimal('0.00')
+
+    for vente in ventes:
+        for ligne in vente.lignes.all():
+            chiffre_affaires += ligne.sous_total_net
+            cout_total += ligne.cout_total
+
+    benefice_total = chiffre_affaires - cout_total
+
+    marge_pourcentage = (
+        (benefice_total / chiffre_affaires * 100).quantize(Decimal('0.01'))
+        if chiffre_affaires > 0 else Decimal('0.00')
+    )
+
+    context = {
+        'pharmacie': pharmacie,
+        'name_phar': pharmacie.nom_pharmacie,
+        'primary_role': primary_role,
+        'roles': roles,
+        'periode': periode,
+        'devise': devise,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'chiffre_affaires': chiffre_affaires,
+        'cout_total': cout_total,
+        'benefice_total': benefice_total,
+        'marge_pourcentage': marge_pourcentage,
+        'nombre_ventes': ventes.count(),
+    }
+
+    return render(request, 'back-end/finances/rapport_benefice.html', context)
+
+
+# **********************************************************************************************************
+# RAPPORT PERTE
+# **********************************************************************************************************
+@login_required
+def rapport_perte(request):
+    """
+    Affiche les pertes de stock (péremptions, casses, vols, ajustements négatifs)
+    sur une période donnée, pour la pharmacie de l'utilisateur connecté.
+    """
+
+    pharmacie = get_object_or_404(
+        Pharmacie, user_pharmacie=request.user
+    )
+
+    role_verify = Role.objects.filter(userRole=request.user).select_related('role')
+    roles = [r.role.nom_typeRole for r in role_verify if r.role]
+
+    if 'super admin' in roles:
+        primary_role = 'super admin'
+    elif 'admin' in roles:
+        primary_role = 'admin'
+    else:
+        primary_role = 'visiteur'
+
+    periode = request.GET.get('periode', 'mois')
+    type_perte = request.GET.get('type_perte', '')
+
+    aujourdhui = timezone.localdate()
+
+    if periode == 'jour':
+        date_debut = date_fin = aujourdhui
+    elif periode == 'semaine':
+        date_debut = aujourdhui - timedelta(days=aujourdhui.weekday())
+        date_fin = aujourdhui
+    elif periode == 'personnalise':
+        try:
+            date_debut = datetime.strptime(
+                request.GET.get('date_debut', ''), '%Y-%m-%d'
+            ).date()
+            date_fin = datetime.strptime(
+                request.GET.get('date_fin', ''), '%Y-%m-%d'
+            ).date()
+        except ValueError:
+            date_debut = aujourdhui.replace(day=1)
+            date_fin = aujourdhui
+    else:
+        date_debut = aujourdhui.replace(day=1)
+        date_fin = aujourdhui
+
+    types_cibles = [type_perte] if type_perte else [
+        MouvementStock.TypeMouvement.PEREMPTION,
+        MouvementStock.TypeMouvement.PERTE,
+    ]
+
+    mouvements = (
+        MouvementStock.objects
+        .filter(
+            stock__pharmacie=pharmacie,
+            type_mouvement__in=types_cibles,
+            date_mouvement__date__gte=date_debut,
+            date_mouvement__date__lte=date_fin,
+        )
+        .select_related('stock', 'stock__medicament')
+        .order_by('-date_mouvement')
+    )
+
+    valeur_totale_perdue = Decimal('0.00')
+    quantite_totale_perdue = 0
+    detail_par_medicament = {}
+
+    for mvt in mouvements:
+        quantite_perdue = mvt.quantite_avant - mvt.quantite_apres
+        if quantite_perdue <= 0:
+            continue
+
+        stock = mvt.stock
+        cout_unitaire = (
+            stock.prix_achat_carton / stock.quantite_par_carton
+            if stock.quantite_par_carton else Decimal('0.00')
+        )
+        valeur_perdue = (cout_unitaire * quantite_perdue).quantize(Decimal('0.01'))
+
+        valeur_totale_perdue += valeur_perdue
+        quantite_totale_perdue += quantite_perdue
+
+        medicament = stock.medicament
+        if medicament.id not in detail_par_medicament:
+            detail_par_medicament[medicament.id] = {
+                'medicament': medicament,
+                'quantite_perdue': 0,
+                'valeur_perdue': Decimal('0.00'),
+            }
+        detail_par_medicament[medicament.id]['quantite_perdue'] += quantite_perdue
+        detail_par_medicament[medicament.id]['valeur_perdue'] += valeur_perdue
+
+    context = {
+        'pharmacie': pharmacie,
+        'name_phar': pharmacie.nom_pharmacie,
+        'primary_role': primary_role,
+        'roles': roles,
+        'periode': periode,
+        'type_perte': type_perte,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'mouvements': mouvements,
+        'quantite_totale_perdue': quantite_totale_perdue,
+        'valeur_totale_perdue': valeur_totale_perdue,
+        'detail_par_medicament': sorted(
+            detail_par_medicament.values(),
+            key=lambda d: d['valeur_perdue'],
+            reverse=True,
+        ),
+    }
+
+    return render(request, 'back-end/finances/rapport_perte.html', context)
+
+
+# ***************************************************************************
+# Rapport financier
+# ***************************************************************************
+@login_required
+def rapport_financier(request):
+    """
+    Vue d'ensemble financière de la pharmacie sur une période donnée.
+    """
+
+    pharmacie = get_object_or_404(
+        Pharmacie, user_pharmacie=request.user
+    )
+
+    role_verify = Role.objects.filter(userRole=request.user).select_related('role')
+    roles = [r.role.nom_typeRole for r in role_verify if r.role]
+
+    if 'super admin' in roles:
+        primary_role = 'super admin'
+    elif 'admin' in roles:
+        primary_role = 'admin'
+    else:
+        primary_role = 'visiteur'
+
+    devise = request.GET.get('devise', 'CDF')
+    periode = request.GET.get('periode', 'mois')
+
+    aujourdhui = timezone.localdate()
+
+    if periode == 'jour':
+        date_debut = date_fin = aujourdhui
+    elif periode == 'semaine':
+        date_debut = aujourdhui - timedelta(days=aujourdhui.weekday())
+        date_fin = aujourdhui
+    elif periode == 'personnalise':
+        try:
+            date_debut = datetime.strptime(
+                request.GET.get('date_debut', ''), '%Y-%m-%d'
+            ).date()
+            date_fin = datetime.strptime(
+                request.GET.get('date_fin', ''), '%Y-%m-%d'
+            ).date()
+        except ValueError:
+            date_debut = aujourdhui.replace(day=1)
+            date_fin = aujourdhui
+    else:
+        date_debut = aujourdhui.replace(day=1)
+        date_fin = aujourdhui
+
+    ventes = (
+        Vente.objects
+        .filter(
+            pharmacie=pharmacie,
+            devise=devise,
+            date_vente__date__gte=date_debut,
+            date_vente__date__lte=date_fin,
+        )
+        .exclude(statut=Vente.StatutVente.ANNULEE)
+        .prefetch_related('lignes', 'lignes__stock', 'paiements')
+    )
+
+    chiffre_affaires = Decimal('0.00')
+    cout_total = Decimal('0.00')
+    montant_encaisse = Decimal('0.00')
+
+    for vente in ventes:
+        for ligne in vente.lignes.all():
+            chiffre_affaires += ligne.sous_total_net
+            cout_total += ligne.cout_total
+        for paiement in vente.paiements.all():
+            montant_encaisse += paiement.montant
+
+    benefice_brut = chiffre_affaires - cout_total
+    montant_restant_du = chiffre_affaires - montant_encaisse
+
+    mouvements_perte = (
+        MouvementStock.objects
+        .filter(
+            stock__pharmacie=pharmacie,
+            type_mouvement__in=[
+                MouvementStock.TypeMouvement.PEREMPTION,
+                MouvementStock.TypeMouvement.PERTE,
+            ],
+            date_mouvement__date__gte=date_debut,
+            date_mouvement__date__lte=date_fin,
+        )
+        .select_related('stock')
+    )
+
+    valeur_pertes = Decimal('0.00')
+    for mvt in mouvements_perte:
+        quantite_perdue = mvt.quantite_avant - mvt.quantite_apres
+        if quantite_perdue <= 0:
+            continue
+        cout_unitaire = (
+            mvt.stock.prix_achat_carton / mvt.stock.quantite_par_carton
+            if mvt.stock.quantite_par_carton else Decimal('0.00')
+        )
+        valeur_pertes += (cout_unitaire * quantite_perdue).quantize(Decimal('0.01'))
+
+    benefice_net = benefice_brut - valeur_pertes
+
+    marge_pourcentage = (
+        (benefice_net / chiffre_affaires * 100).quantize(Decimal('0.01'))
+        if chiffre_affaires > 0 else Decimal('0.00')
+    )
+
+    context = {
+        'pharmacie': pharmacie,
+        'name_phar': pharmacie.nom_pharmacie,
+        'primary_role': primary_role,
+        'roles': roles,
+        'periode': periode,
+        'devise': devise,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'chiffre_affaires': chiffre_affaires,
+        'cout_total': cout_total,
+        'benefice_brut': benefice_brut,
+        'valeur_pertes': valeur_pertes,
+        'benefice_net': benefice_net,
+        'marge_pourcentage': marge_pourcentage,
+        'montant_encaisse': montant_encaisse,
+        'montant_restant_du': montant_restant_du,
+        'nombre_ventes': ventes.count(),
+    }
+
+    return render(request, 'back-end/finances/rapport_financier.html', context) 
+

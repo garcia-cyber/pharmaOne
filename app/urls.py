@@ -38,33 +38,17 @@ urlpatterns = [
     # vente 
     path("creer_vente/",views.creer_vente,name="creer_vente"),
     path("detail_vente/<int:vente_id>/",views.detail_vente,name="detail_vente"),
-    path(
-    "api/medicament-vente/<int:medicament_id>/",
-    views.api_medicament_vente,
-    name="api_medicament_vente"
-),
-    path(
-    "ventes/<int:vente_id>/reglement/",
-    views.ajouter_reglement_vente,
-    name="ajouter_reglement_vente"
-),
-    path(
-    "ventes/",
-    views.liste_ventes,
-    name="liste_ventes"
-),
-    path(
-    "ventes/<int:vente_id>/annuler/",
-    views.annuler_vente,
-    name="annuler_vente"
-),
+    path("api/medicament-vente/<int:medicament_id>/",views.api_medicament_vente,name="api_medicament_vente"),
+    path("ventes/<int:vente_id>/reglement/",views.ajouter_reglement_vente,name="ajouter_reglement_vente"),
+    path("ventes/",views.liste_ventes,name="liste_ventes"),
+    path("ventes/<int:vente_id>/annuler/",views.annuler_vente,name="annuler_vente"),
+    path("ventes/<int:vente_id>/retour/",views.retour_partiel_vente,name="retour_partiel_vente"),
 
-    path(
-        "ventes/<int:vente_id>/retour/",
-        views.retour_partiel_vente,
-        name="retour_partiel_vente"
-    ),
-    
+    # *************************************
+    # benefice
+    path("rapport_benefice/",rapport_benefice , name = "rapport_benefice"),   
+    path("rapport_perte/",rapport_perte , name = "rapport_perte"),  
+    path("rapport_financier/",rapport_financier , name = "rapport_financier"),   
     
     
 ]
