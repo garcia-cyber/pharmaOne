@@ -35,8 +35,15 @@
       <div class="main-content">
         <section class="section">
           <div class="section-header d-flex align-items-center justify-content-between">
-            <h1 class="section-title-pharma">Tableau de bord – Pharmacie</h1> <br>
-            <h3 class="section-title-pharma">Pharmacie {{name_phar}}</h3>
+            <div>
+              <h1 class="section-title-pharma">Tableau de bord</h1>
+              <h3 class="section-title-pharma">{{ name_phar }}</h3>
+            </div>
+            {% if primary_role == 'super admin' %}
+              <span class="badge badge-primary">Vue globale</span>
+            {% else %}
+              <span class="badge badge-light">Vue de vos pharmacies</span>
+            {% endif %}
           </div>
 
           <!-- Cartes statistiques (plus compactes) -->
@@ -49,13 +56,13 @@
                     <div class="card-content">
                       <h5 class="font-15">
                         <i class="fas fa-file-prescription pharma-icon"></i>
-                        Ordonnances du jour
+                        Ventes du jour
                       </h5>
                       <h2 class="mb-1 font-18">
-                        {{ stats.nb_ordonnances_jour|default:"258" }}
+                        {{ stats.nb_ordonnances_jour|default:"0" }}
                       </h2>
                       <p class="mb-0">
-                        <span class="col-green">+10%</span> vs hier
+                        Transactions enregistrées
                       </p>
                     </div>
                     <div class="banner-img">
@@ -77,10 +84,10 @@
                         Patients / Clients
                       </h5>
                       <h2 class="mb-1 font-18">
-                        {{ stats.nb_clients|default:"1,287" }}
+                        {{ stats.nb_clients|default:"0" }}
                       </h2>
                       <p class="mb-0">
-                        <span class="col-orange">-9%</span> cette semaine
+                        Clients identifiés
                       </p>
                     </div>
                     <div class="banner-img">
@@ -99,13 +106,13 @@
                     <div class="card-content">
                       <h5 class="font-15">
                         <i class="fas fa-box-open pharma-icon"></i>
-                        Nouveaux produits
+                        Médicaments
                       </h5>
                       <h2 class="mb-1 font-18">
-                        {{ stats.nb_nouveaux_produits|default:"128" }}
+                        {{ stats.nb_medicaments|default:"0" }}
                       </h2>
                       <p class="mb-0">
-                        <span class="col-green">+18%</span> ce mois
+                        Références accessibles
                       </p>
                     </div>
                     <div class="banner-img">
@@ -124,13 +131,13 @@
                     <div class="card-content">
                       <h5 class="font-15">
                         <i class="fas fa-cash-register pharma-icon"></i>
-                        Chiffre d’affaires
+                        Stock faible
                       </h5>
                       <h2 class="mb-1 font-18">
-                        {{ stats.ca_total|default:"48 697 €" }}
+                        {{ stats.stock_faible|default:"0" }}
                       </h2>
                       <p class="mb-0">
-                        <span class="col-green">+42%</span> ce mois
+                        Lots à surveiller
                       </p>
                     </div>
                     <div class="banner-img">
@@ -176,8 +183,9 @@
                           <div class="list-inline text-center">
                             <div class="list-inline-item p-r-20">
                               <i data-feather="arrow-up-circle" class="col-green"></i>
-                              <h5 class="m-b-0">{{ stats.ca_hebdo|default:"675 €" }}</h5>
-                              <p class="text-muted font-14 m-b-0">CA hebdo</p>
+                              <h5 class="m-b-0">{{ stats.ca_hebdo_cdf|floatformat:2 }} CDF</h5>
+                              <p class="text-muted font-14 m-b-0">CA hebdomadaire</p>
+                              <small>{{ stats.ca_hebdo_usd|floatformat:2 }} USD</small>
                             </div>
                           </div>
                         </div>
@@ -185,8 +193,9 @@
                           <div class="list-inline text-center">
                             <div class="list-inline-item p-r-20">
                               <i data-feather="arrow-down-circle" class="col-orange"></i>
-                              <h5 class="m-b-0">{{ stats.ca_mensuel|default:"1 587 €" }}</h5>
+                              <h5 class="m-b-0">{{ stats.ca_mensuel_cdf|floatformat:2 }} CDF</h5>
                               <p class="text-muted font-14 m-b-0">CA mensuel</p>
+                              <small>{{ stats.ca_mensuel_usd|floatformat:2 }} USD</small>
                             </div>
                           </div>
                         </div>
@@ -194,8 +203,9 @@
                           <div class="list-inline text-center">
                             <div class="list-inline-item p-r-20">
                               <i data-feather="arrow-up-circle" class="col-green"></i>
-                              <h5 class="mb-0 m-b-0">{{ stats.ca_annuel|default:"45 965 €" }}</h5>
+                              <h5 class="mb-0 m-b-0">{{ stats.ca_annuel_cdf|floatformat:2 }} CDF</h5>
                               <p class="text-muted font-14 m-b-0">CA annuel</p>
+                              <small>{{ stats.ca_annuel_usd|floatformat:2 }} USD</small>
                             </div>
                           </div>
                         </div>
@@ -204,34 +214,29 @@
 
                     <div class="col-lg-4">
                       <div class="row mt-2">
-                        <div class="col-7 col-xl-7 mb-2">Total patients</div>
+                        <div class="col-7 col-xl-7 mb-2">Ventes du mois</div>
                         <div class="col-5 col-xl-5 mb-2">
-                          <span class="text-big">{{ stats.total_clients|default:"8 257" }}</span>
-                          <sup class="col-green">+09%</sup>
+                          <span class="text-big">{{ stats.nb_ventes_mois|default:"0" }}</span>
                         </div>
 
-                        <div class="col-7 col-xl-7 mb-2">Revenu total</div>
+                        <div class="col-7 col-xl-7 mb-2">CA du jour</div>
                         <div class="col-5 col-xl-5 mb-2">
-                          <span class="text-big">{{ stats.revenu_total|default:"9 857 €" }}</span>
-                          <sup class="text-danger">-18%</sup>
+                          <span class="text-big">{{ stats.ca_jour_cdf|floatformat:2 }} CDF</span>
                         </div>
 
-                        <div class="col-7 col-xl-7 mb-2">Commandes traitées</div>
+                        <div class="col-7 col-xl-7 mb-2">Médicaments ajoutés</div>
                         <div class="col-5 col-xl-5 mb-2">
-                          <span class="text-big">{{ stats.commandes_traitees|default:"28" }}</span>
-                          <sup class="col-green">+16%</sup>
+                          <span class="text-big">{{ stats.nb_nouveaux_produits|default:"0" }}</span>
                         </div>
 
-                        <div class="col-7 col-xl-7 mb-2">Dépenses</div>
+                        <div class="col-7 col-xl-7 mb-2">Lots en stock</div>
                         <div class="col-5 col-xl-5 mb-2">
-                          <span class="text-big">{{ stats.depenses|default:"6 287 €" }}</span>
-                          <sup class="col-green">+09%</sup>
+                          <span class="text-big">{{ stats.nb_stocks|default:"0" }}</span>
                         </div>
 
-                        <div class="col-7 col-xl-7 mb-2">Nouveaux patients</div>
+                        <div class="col-7 col-xl-7 mb-2">CA du jour en USD</div>
                         <div class="col-5 col-xl-5 mb-2">
-                          <span class="text-big">{{ stats.nouveaux_clients|default:"684" }}</span>
-                          <sup class="col-green">+22%</sup>
+                          <span class="text-big">{{ stats.ca_jour_usd|floatformat:2 }} USD</span>
                         </div>
                       </div>
                     </div>

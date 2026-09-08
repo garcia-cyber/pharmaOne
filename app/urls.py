@@ -10,6 +10,7 @@ urlpatterns = [
     path('', login , name="login"),
     path('dashboard/', dashboard , name = 'dashboard'), 
     path('deco/', deco , name = 'deco') ,
+    path('changer-mot-de-passe/', changer_mot_de_passe, name='changer_mot_de_passe'),
 
     # ***********************************
     # settings 

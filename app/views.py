@@ -14,6 +14,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from datetime import datetime, timedelta
 from decimal import Decimal
+from django.contrib.auth.forms import PasswordChangeForm
 
 
 
@@ -52,28 +53,107 @@ def login(request):
 # ===================================================================================================
 @login_required()
 def dashboard(request):
-    role_verify = Role.objects.filter(userRole = request.user).select_related('role') 
-    roles       = [r.role.nom_typeRole for r in role_verify if r.role ] 
-    
-    if 'super admin' in roles :
-        primary_role = 'super admin' 
-    elif 'admin' in roles :
-        primary_role = 'admin'
-    else :
-        primary_role = 'visiteur' 
+    role_verify = (
+        Role.objects
+        .filter(userRole=request.user, statut='active')
+        .select_related('role', 'pharmacie')
+    )
+    roles = [user_role.role.nom_typeRole for user_role in role_verify if user_role.role]
+    roles_normalises = [role.lower().strip() for role in roles]
 
+    if 'super admin' in roles_normalises:
+        primary_role = 'super admin'
+        pharmacies = Pharmacie.objects.all()
+    else:
+        if 'admin' in roles_normalises:
+            primary_role = 'admin'
+        elif 'gestionnaire' in roles_normalises:
+            primary_role = 'gestionnaire'
+        else:
+            primary_role = 'visiteur'
 
-    #
-    # pahrmacie nom
-    pharmacie_obj = Pharmacie.objects.filter(user_pharmacie = request.user).first()
-    name_phar = pharmacie_obj.nom_pharmacie if pharmacie_obj else 'pas de nom'
+        pharmacies = Pharmacie.objects.filter(
+            Q(user_pharmacie=request.user) |
+            Q(roles__userRole=request.user, roles__statut='active')
+        ).distinct()
+
+    pharmacie_noms = list(
+        pharmacies.order_by('nom_pharmacie').values_list('nom_pharmacie', flat=True)
+    )
+    if primary_role == 'super admin':
+        name_phar = 'Toutes les pharmacies'
+    else:
+        name_phar = ', '.join(pharmacie_noms) if pharmacie_noms else 'pas de nom'
+
+    aujourd_hui = timezone.localdate()
+    debut_semaine = aujourd_hui - timedelta(days=aujourd_hui.weekday())
+    debut_mois = aujourd_hui.replace(day=1)
+    debut_annee = aujourd_hui.replace(month=1, day=1)
+
+    ventes = (
+        Vente.objects
+        .filter(
+            pharmacie__in=pharmacies,
+            statut__in=[
+                Vente.StatutVente.EN_ATTENTE,
+                Vente.StatutVente.PARTIELLEMENT_PAYEE,
+                Vente.StatutVente.PAYEE,
+            ],
+        )
+        .prefetch_related('lignes__stock')
+    )
+
+    def chiffre_affaires_par_devise(queryset):
+        totaux = {'CDF': Decimal('0.00'), 'USD': Decimal('0.00')}
+        for ligne in LigneVente.objects.filter(
+            vente__in=queryset
+        ).select_related('vente', 'stock'):
+            devise = ligne.vente.devise
+            if devise in totaux:
+                totaux[devise] += ligne.sous_total_net
+        return totaux
+
+    ventes_jour = ventes.filter(date_vente__date=aujourd_hui)
+    ventes_semaine = ventes.filter(date_vente__date__gte=debut_semaine)
+    ventes_mois = ventes.filter(date_vente__date__gte=debut_mois)
+    ventes_annee = ventes.filter(date_vente__date__gte=debut_annee)
+
+    ca_jour = chiffre_affaires_par_devise(ventes_jour)
+    ca_semaine = chiffre_affaires_par_devise(ventes_semaine)
+    ca_mois = chiffre_affaires_par_devise(ventes_mois)
+    ca_annee = chiffre_affaires_par_devise(ventes_annee)
+
+    stocks = Stock.objects.filter(pharmacie__in=pharmacies)
+    medicaments = Medicament.objects.filter(pharmacie__in=pharmacies)
+    stock_faible = stocks.filter(quantite_restante__lte=10).count()
 
     context = {
-        'primary_role': primary_role ,
-        'roles' : roles  ,
-        'name_phar' : name_phar
+        'primary_role': primary_role,
+        'roles': roles,
+        'name_phar': name_phar,
+        'stats': {
+            'nb_ordonnances_jour': ventes_jour.count(),
+            'nb_ventes_mois': ventes_mois.count(),
+            'nb_clients': ventes.values('client_telephone').exclude(
+                client_telephone__isnull=True
+            ).exclude(client_telephone='').distinct().count(),
+            'nb_nouveaux_produits': medicaments.filter(
+                date_creation__date__gte=debut_mois
+            ).count(),
+            'nb_medicaments': medicaments.count(),
+            'nb_stocks': stocks.count(),
+            'stock_faible': stock_faible,
+            'ca_jour_cdf': ca_jour['CDF'],
+            'ca_jour_usd': ca_jour['USD'],
+            'ca_hebdo_cdf': ca_semaine['CDF'],
+            'ca_hebdo_usd': ca_semaine['USD'],
+            'ca_mensuel_cdf': ca_mois['CDF'],
+            'ca_mensuel_usd': ca_mois['USD'],
+            'ca_annuel_cdf': ca_annee['CDF'],
+            'ca_annuel_usd': ca_annee['USD'],
+        },
     }
-    return render(request, 'back-end/dashboard/index.html',context)
+    return render(request, 'back-end/dashboard/index.html', context)
 
 # ===================================================================================================
 # ===================================================================================================
@@ -3324,7 +3404,7 @@ def rapport_benefice(request):
         'nombre_ventes': ventes.count(),
     }
 
-    return render(request, 'back-end/finances/rapport_benefice.html', context)
+    return render(request, 'back-end/finances/rapport_benefice.html', context)  
 
 
 # **********************************************************************************************************
@@ -3572,3 +3652,38 @@ def rapport_financier(request):
 
     return render(request, 'back-end/finances/rapport_financier.html', context) 
 
+
+# ***********************************************************************
+# CHANGEMENT DU MOT DE PASSE 
+# ***********************************************************************
+@login_required
+def changer_mot_de_passe(request):
+    pharmacie_obj = Pharmacie.objects.filter(user_pharmacie=request.user).first()
+    name_phar = pharmacie_obj.nom_pharmacie if pharmacie_obj else 'pas de nom'
+
+    role_verify = Role.objects.filter(userRole=request.user).select_related('role')
+    roles = [r.role.nom_typeRole for r in role_verify if r.role]
+
+    if 'super admin' in roles:
+        primary_role = 'super admin'
+    elif 'admin' in roles:
+        primary_role = 'admin'
+    else:
+        primary_role = 'visiteur'
+
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Votre mot de passe a été modifié avec succès.')
+            return redirect('changer_mot_de_passe')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'back-end/authentifications/password_change.html', {
+        'form': form,
+        'primary_role': primary_role,
+        'roles': roles,
+        'name_phar': name_phar,
+    })

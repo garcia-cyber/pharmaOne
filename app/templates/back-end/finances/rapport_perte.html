@@ -1,0 +1,292 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+  <title>Rapport des pertes | {{ name_phar }}</title>
+
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css' %}">
+  <link rel="shortcut icon" type="image/x-icon" href="{% static 'back-end/assets/img/favicon.ico' %}">
+  {% include "back-end/includes/style.html" %}
+
+  <style>
+    .main-content { min-height: 100vh; background: var(--pharma-bg); }
+    .section { padding: 22px 18px 0; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      min-height: 76px; margin-bottom: 20px; padding: 16px 21px;
+      border: 1px solid #b9ece3; border-radius: 14px;
+      background: linear-gradient(135deg, #effcf9, #f3fbff);
+    }
+    .section-header-left { display: flex; align-items: center; gap: 13px; }
+    .section-header-icon {
+      display: flex; align-items: center; justify-content: center;
+      flex: 0 0 43px; width: 43px; height: 43px; border-radius: 12px;
+      background: var(--pharma-primary); color: #fff;
+      box-shadow: 0 5px 12px rgba(15, 118, 110, .22);
+    }
+    .section-header-icon i { font-size: 19px; }
+    .section-header h1 { margin: 0; color: var(--pharma-primary-dark); font-size: 20px; font-weight: 800; }
+    .section-header p { margin: 4px 0 0; color: var(--pharma-muted); font-size: 12px; font-weight: 500; }
+    .pharmacie-name {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px;
+      border: 1px solid #bdece4; border-radius: 8px; background: #fff;
+      color: var(--pharma-primary-dark); font-size: 12px; font-weight: 700;
+    }
+    .pharma-card {
+      overflow: hidden; margin-bottom: 20px; border: 1px solid var(--pharma-border);
+      border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgba(15, 23, 42, .06);
+    }
+    .pharma-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #edf2f7;
+    }
+    .pharma-card-header h4 {
+      display: flex; align-items: center; gap: 8px; margin: 0;
+      color: var(--pharma-text); font-size: 15px; font-weight: 800;
+    }
+    .pharma-card-header h4 i { color: var(--pharma-primary); }
+    .pharma-card-body { padding: 20px; }
+    .filter-form label {
+      display: block; margin-bottom: 7px; color: #334155; font-size: 12px; font-weight: 700;
+    }
+    .filter-form .form-control, .filter-form select {
+      min-height: 43px; border: 1px solid #d8e3e1; border-radius: 8px;
+      background: #fbfdfd; font-size: 13px;
+    }
+    .filter-form .form-control:focus, .filter-form select:focus {
+      border-color: var(--pharma-primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12);
+    }
+    .btn-filter {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 43px; padding: 9px 16px; border: 0; border-radius: 8px;
+      background: linear-gradient(135deg, var(--pharma-primary-dark), var(--pharma-primary));
+      color: #fff; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .btn-filter:hover { color: #fff; box-shadow: 0 6px 14px rgba(15, 118, 110, .22); }
+    .date-custom { display: none; }
+    .date-custom.is-visible { display: flex; }
+    .stat-card {
+      height: calc(100% - 20px); margin-bottom: 20px; padding: 18px;
+      border: 1px solid var(--pharma-border); border-radius: 14px; background: #fff;
+      box-shadow: 0 5px 18px rgba(15, 23, 42, .06);
+    }
+    .stat-card-label {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+      color: var(--pharma-muted); font-size: 12px; font-weight: 700;
+    }
+    .stat-card-label i { color: var(--pharma-red); font-size: 16px; }
+    .stat-card-value { margin: 0; color: var(--pharma-red); font-size: 22px; font-weight: 800; }
+    .stat-card-value small { color: var(--pharma-muted); font-size: 12px; font-weight: 700; }
+    .stat-card-period { margin: 7px 0 0; color: var(--pharma-muted); font-size: 11px; }
+    .period-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px;
+      border-radius: 7px; background: var(--pharma-red-light); color: #991b1b;
+      font-size: 11px; font-weight: 800;
+    }
+    .report-table { width: 100%; margin: 0; }
+    .report-table th {
+      padding: 12px 15px; border-top: 0; background: #f8fafc;
+      color: var(--pharma-muted); font-size: 11px; font-weight: 800; text-transform: uppercase;
+    }
+    .report-table td { padding: 14px 15px; border-color: #edf2f7; color: var(--pharma-text); font-size: 13px; }
+    .report-table td strong { font-weight: 800; }
+    .report-table .amount { text-align: right; font-weight: 800; color: var(--pharma-red); }
+    .empty-state { padding: 30px 15px; text-align: center; color: var(--pharma-muted); font-size: 13px; }
+    .main-footer {
+      margin-top: 24px; border-top: 1px solid var(--pharma-border);
+      background: #fff; color: var(--pharma-muted); font-size: 12px;
+    }
+    .main-footer a { color: var(--pharma-primary); font-weight: 700; }
+    @media (max-width: 576px) {
+      .section { padding: 14px 10px 0; }
+      .section-header { align-items: flex-start; min-height: auto; padding: 14px; }
+      .section-header h1 { font-size: 17px; }
+      .section-header-icon, .pharmacie-name { display: none; }
+      .pharma-card-body { padding: 16px; }
+      .btn-filter { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+      {% include "back-end/includes/header.html" %}
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <div class="main-content">
+        <section class="section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <div class="section-header-icon"><i class="fas fa-exclamation-triangle"></i></div>
+              <div>
+                <h1>Rapport des pertes</h1>
+                <p>Suivez les produits retirés du stock par péremption, casse ou perte.</p>
+              </div>
+            </div>
+            <div class="pharmacie-name">
+              <i class="fas fa-clinic-medical"></i>
+              {{ name_phar|default:"Pharmacie non définie" }}
+            </div>
+          </div>
+
+          <div class="pharma-card">
+            <div class="pharma-card-header">
+              <h4><i class="fas fa-sliders-h"></i> Filtres du rapport</h4>
+              <span class="period-badge">
+                <i class="far fa-calendar-alt"></i>
+                {{ date_debut|date:"d/m/Y" }} - {{ date_fin|date:"d/m/Y" }}
+              </span>
+            </div>
+            <div class="pharma-card-body">
+              <form method="get" class="filter-form">
+                <div class="row align-items-end">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="periode">Période</label>
+                      <select id="periode" name="periode" class="form-control">
+                        <option value="jour" {% if periode == "jour" %}selected{% endif %}>Aujourd'hui</option>
+                        <option value="semaine" {% if periode == "semaine" %}selected{% endif %}>Cette semaine</option>
+                        <option value="mois" {% if periode == "mois" %}selected{% endif %}>Ce mois</option>
+                        <option value="personnalise" {% if periode == "personnalise" %}selected{% endif %}>Période personnalisée</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="type_perte">Type de perte</label>
+                      <select id="type_perte" name="type_perte" class="form-control">
+                        <option value="" {% if not type_perte %}selected{% endif %}>Toutes les pertes</option>
+                        <option value="PEREMPTION" {% if type_perte == "PEREMPTION" %}selected{% endif %}>Péremption</option>
+                        <option value="PERTE" {% if type_perte == "PERTE" %}selected{% endif %}>Perte / casse</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <button type="submit" class="btn-filter">
+                        <i class="fas fa-search"></i> Actualiser le rapport
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="dates-personnalisees" class="row date-custom {% if periode == "personnalise" %}is-visible{% endif %}">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="date_debut">Date de début</label>
+                      <input type="date" id="date_debut" name="date_debut" class="form-control" value="{{ date_debut|date:'Y-m-d' }}">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="date_fin">Date de fin</label>
+                      <input type="date" id="date_fin" name="date_fin" class="form-control" value="{{ date_fin|date:'Y-m-d' }}">
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xl-4 col-lg-4 col-md-6">
+              <div class="stat-card">
+                <div class="stat-card-label"><i class="fas fa-boxes"></i> Quantité totale perdue</div>
+                <p class="stat-card-value">{{ quantite_totale_perdue }}</p>
+                <p class="stat-card-period">Unités retirées du stock</p>
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-4 col-md-6">
+              <div class="stat-card">
+                <div class="stat-card-label"><i class="fas fa-money-bill-wave"></i> Valeur totale perdue</div>
+                <p class="stat-card-value">{{ valeur_totale_perdue|floatformat:2 }}</p>
+                <p class="stat-card-period">Évaluée au coût d'achat</p>
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-4 col-md-12">
+              <div class="stat-card">
+                <div class="stat-card-label"><i class="fas fa-list-ol"></i> Médicaments concernés</div>
+                <p class="stat-card-value">{{ detail_par_medicament|length }}</p>
+                <p class="stat-card-period">Références impactées</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pharma-card">
+            <div class="pharma-card-header">
+              <h4><i class="fas fa-pills"></i> Détail par médicament</h4>
+              <span class="period-badge">{{ detail_par_medicament|length }} référence{{ detail_par_medicament|length|pluralize }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table report-table">
+                <thead>
+                  <tr>
+                    <th>Médicament</th>
+                    <th>Quantité perdue</th>
+                    <th class="text-right">Valeur perdue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for detail in detail_par_medicament %}
+                    <tr>
+                      <td><strong>{{ detail.medicament.nom }}</strong></td>
+                      <td>{{ detail.quantite_perdue }}</td>
+                      <td class="amount">{{ detail.valeur_perdue|floatformat:2 }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3" class="empty-state">
+                        <i class="fas fa-check-circle text-success mr-2"></i>
+                        Aucune perte enregistrée pour la période sélectionnée.
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="main-footer">
+        <div class="footer-left">
+          <a href="{% url 'dashboard' %}">Pharma ERP</a> — Gestion pharmaceutique
+        </div>
+        <div class="footer-right">&copy; {% now "Y" %} — Tous droits réservés</div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="{% static 'back-end/assets/js/app.min.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/scripts.js' %}"></script>
+  <script src="{% static 'back-end/assets/js/custom.js' %}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const periode = document.getElementById("periode");
+      const datesPersonnalisees = document.getElementById("dates-personnalisees");
+
+      function afficherDatesPersonnalisees() {
+        if (!periode || !datesPersonnalisees) return;
+        datesPersonnalisees.classList.toggle("is-visible", periode.value === "personnalise");
+      }
+
+      if (periode) {
+        periode.addEventListener("change", afficherDatesPersonnalisees);
+        afficherDatesPersonnalisees();
+      }
+    });
+  </script>
+</body>
+
+</html>
