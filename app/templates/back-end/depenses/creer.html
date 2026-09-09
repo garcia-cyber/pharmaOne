@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>Pharma | Nouvelle dépense</title>
+
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/app.min.css'%}">
+  <!-- Template CSS -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/style.css'%}">
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/components.css'%}">
+  <!-- Custom style CSS -->
+  <link rel="stylesheet" href="{% static 'back-end/assets/css/custom.css'%}">
+
+  <link rel='shortcut icon' type='image/x-icon' href="{% static 'back-end/assets/img/favicon.ico' %}" />
+
+  {% include "back-end/includes/style.html" %} 
+</head>
+
+<body>
+  <div class="loader"></div>
+  <div id="app">
+    <div class="main-wrapper main-wrapper-1">
+      <div class="navbar-bg"></div>
+
+      {% include "back-end/includes/header.html" %}
+
+      <div class="main-sidebar sidebar-style-2">
+        {% include "back-end/includes/aside.html" %}
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <section class="section">
+          <div class="section-header d-flex align-items-center justify-content-between">
+            <div>
+              <h1 class="section-title-pharma">Nouvelle dépense</h1>
+              <h3 class="section-title-pharma">{{ name_phar }}</h3>
+            </div>
+            {% if primary_role == 'super admin' %}
+              <span class="badge badge-primary">Vue globale</span>
+            {% else %}
+              <span class="badge badge-light">Vue de vos pharmacies</span>
+            {% endif %}
+          </div>
+
+          <!-- Messages Django (succès / erreurs) -->
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Fermer">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <div class="row">
+            <!-- Colonne formulaire -->
+            <div class="col-lg-8">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Enregistrer une dépense</h4>
+                </div>
+                <div class="card-body">
+
+                  <!-- Erreurs globales (non liées à un champ précis) -->
+                  {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                      {% for erreur in form.non_field_errors %}
+                        <p class="mb-0">{{ erreur }}</p>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+
+                  <form method="post">
+                    {% csrf_token %}
+
+                    {% if pharmacies|default:None and pharmacies.count > 1 %}
+                    <div class="form-group">
+                      <label for="{{ form.pharmacie.id_for_label|default:'pharmacie' }}">Pharmacie</label>
+                      <select name="pharmacie" class="form-control">
+                        {% for p in pharmacies %}
+                          <option value="{{ p.id }}" {% if p.id == pharmacie.id %}selected{% endif %}>
+                            {{ p.nom_pharmacie }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="{{ form.categorie.id_for_label }}">Catégorie</label>
+                        {{ form.categorie }}
+                        {% if form.categorie.errors %}
+                          <small class="text-danger">{{ form.categorie.errors|join:", " }}</small>
+                        {% endif %}
+                      </div>
+
+                      <div class="form-group col-md-6">
+                        <label for="{{ form.motif.id_for_label }}">Motif</label>
+                        {{ form.motif }}
+                        {% if form.motif.errors %}
+                          <small class="text-danger">{{ form.motif.errors|join:", " }}</small>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="{{ form.description.id_for_label }}">Description (optionnel)</label>
+                      {{ form.description }}
+                      {% if form.description.errors %}
+                        <small class="text-danger">{{ form.description.errors|join:", " }}</small>
+                      {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="{{ form.montant.id_for_label }}">Montant</label>
+                        {{ form.montant }}
+                        {% if form.montant.errors %}
+                          <small class="text-danger">{{ form.montant.errors|join:", " }}</small>
+                        {% endif %}
+                      </div>
+
+                      <div class="form-group col-md-6">
+                        <label for="{{ form.devise.id_for_label }}">Devise</label>
+                        {{ form.devise }}
+                        {% if form.devise.errors %}
+                          <small class="text-danger">{{ form.devise.errors|join:", " }}</small>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-save"></i> Enregistrer la dépense
+                    </button>
+                    <a href="{% url 'liste_depenses' %}" class="btn btn-light">Annuler</a>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Colonne solde de caisse -->
+            <div class="col-lg-4">
+              <div class="card">
+                <div class="card-statistic-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="card-content">
+                      <h5 class="font-15">
+                        <i class="fas fa-cash-register pharma-icon"></i>
+                        Solde de caisse
+                      </h5>
+                      <h2 class="mb-1 font-18">
+                        {{ solde_actuel|floatformat:2 }} CDF
+                      </h2>
+                      <p class="mb-0">
+                        Disponible avant cette dépense
+                      </p>
+                    </div>
+                    <div class="banner-img">
+                      <i class="fas fa-coins fa-2x" style="color: #111827;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="mb-2">À savoir</h5>
+                  <p class="text-muted mb-1">
+                    Le solde affiché est en équivalent CDF (les montants en
+                    USD sont convertis via le taux de change actif).
+                  </p>
+                  <p class="text-muted mb-0">
+                    Une dépense dont le montant dépasse ce solde sera
+                    automatiquement refusée.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <footer class="main-footer">
+          <div class="footer-left">
+            <a href="#">Pharma ERP</a>
+          </div>
+          <div class="footer-right">
+            &copy; {{ now|date:"Y" }} – Tous droits réservés
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- General JS Scripts -->
+  <script src="{% static 'back-end/assets/js/app.min.js'%}"></script>
+  <!-- Template JS File -->
+  <script src="{% static 'back-end/assets/js/scripts.js'%}"></script>
+  <!-- Custom JS File -->
+  <script src="{% static 'back-end/assets/js/custom.js'%}"></script>
+</body>
+</html>

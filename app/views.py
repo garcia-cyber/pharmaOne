@@ -51,6 +51,48 @@ def login(request):
 
 # ===================================================================================================
 # ===================================================================================================
+# ***************************************************************************************************
+def obtenir_bornes_periode(request, aujourd_hui):
+    """
+    Détermine la période à afficher à partir du GET, et retourne
+    (periode_code, date_debut, date_fin, label_affiche).
+    date_fin est incluse (dernier jour de la période).
+    """
+    periode = request.GET.get('periode', 'jour')
+ 
+    if periode == 'jour':
+        return periode, aujourd_hui, aujourd_hui, "Aujourd'hui"
+ 
+    if periode == 'semaine':
+        debut = aujourd_hui - timedelta(days=aujourd_hui.weekday())
+        return periode, debut, aujourd_hui, "Cette semaine"
+ 
+    if periode == 'mois':
+        debut = aujourd_hui.replace(day=1)
+        return periode, debut, aujourd_hui, "Ce mois"
+ 
+    if periode == 'annee':
+        debut = aujourd_hui.replace(month=1, day=1)
+        return periode, debut, aujourd_hui, "Cette année"
+ 
+    if periode == 'personnalise':
+        date_debut_str = request.GET.get('date_debut')
+        date_fin_str = request.GET.get('date_fin')
+        try:
+            debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
+            fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
+            return periode, debut, fin, f"Du {debut.strftime('%d/%m/%Y')} au {fin.strftime('%d/%m/%Y')}"
+        except (TypeError, ValueError):
+            # dates manquantes ou mal formées -> retombe sur le mois en cours
+            debut = aujourd_hui.replace(day=1)
+            return 'mois', debut, aujourd_hui, "Ce mois"
+ 
+    # valeur inconnue dans l'URL -> défaut
+    return 'jour', aujourd_hui, aujourd_hui, "Aujourd'hui"
+#
+#
+# ************************************************
+
 @login_required()
 def dashboard(request):
     role_verify = (
@@ -60,7 +102,7 @@ def dashboard(request):
     )
     roles = [user_role.role.nom_typeRole for user_role in role_verify if user_role.role]
     roles_normalises = [role.lower().strip() for role in roles]
-
+ 
     if 'super admin' in roles_normalises:
         primary_role = 'super admin'
         pharmacies = Pharmacie.objects.all()
@@ -71,12 +113,12 @@ def dashboard(request):
             primary_role = 'gestionnaire'
         else:
             primary_role = 'visiteur'
-
+ 
         pharmacies = Pharmacie.objects.filter(
             Q(user_pharmacie=request.user) |
             Q(roles__userRole=request.user, roles__statut='active')
         ).distinct()
-
+ 
     pharmacie_noms = list(
         pharmacies.order_by('nom_pharmacie').values_list('nom_pharmacie', flat=True)
     )
@@ -84,12 +126,12 @@ def dashboard(request):
         name_phar = 'Toutes les pharmacies'
     else:
         name_phar = ', '.join(pharmacie_noms) if pharmacie_noms else 'pas de nom'
-
+ 
     aujourd_hui = timezone.localdate()
-    debut_semaine = aujourd_hui - timedelta(days=aujourd_hui.weekday())
-    debut_mois = aujourd_hui.replace(day=1)
-    debut_annee = aujourd_hui.replace(month=1, day=1)
-
+ 
+    # --- Période sélectionnée (jour / semaine / mois / année / personnalisé) ---
+    periode, date_debut, date_fin, label_periode = obtenir_bornes_periode(request, aujourd_hui)
+ 
     ventes = (
         Vente.objects
         .filter(
@@ -102,7 +144,7 @@ def dashboard(request):
         )
         .prefetch_related('lignes__stock')
     )
-
+ 
     def chiffre_affaires_par_devise(queryset):
         totaux = {'CDF': Decimal('0.00'), 'USD': Decimal('0.00')}
         for ligne in LigneVente.objects.filter(
@@ -112,49 +154,43 @@ def dashboard(request):
             if devise in totaux:
                 totaux[devise] += ligne.sous_total_net
         return totaux
-
-    ventes_jour = ventes.filter(date_vente__date=aujourd_hui)
-    ventes_semaine = ventes.filter(date_vente__date__gte=debut_semaine)
-    ventes_mois = ventes.filter(date_vente__date__gte=debut_mois)
-    ventes_annee = ventes.filter(date_vente__date__gte=debut_annee)
-
-    ca_jour = chiffre_affaires_par_devise(ventes_jour)
-    ca_semaine = chiffre_affaires_par_devise(ventes_semaine)
-    ca_mois = chiffre_affaires_par_devise(ventes_mois)
-    ca_annee = chiffre_affaires_par_devise(ventes_annee)
-
+ 
+    # Ventes filtrées sur la période choisie (une seule requête, plus les 4)
+    ventes_periode = ventes.filter(
+        date_vente__date__gte=date_debut,
+        date_vente__date__lte=date_fin,
+    )
+    ca_periode = chiffre_affaires_par_devise(ventes_periode)
+ 
     stocks = Stock.objects.filter(pharmacie__in=pharmacies)
     medicaments = Medicament.objects.filter(pharmacie__in=pharmacies)
     stock_faible = stocks.filter(quantite_restante__lte=10).count()
-
+ 
     context = {
         'primary_role': primary_role,
         'roles': roles,
         'name_phar': name_phar,
+        'periode_active': periode,
+        'label_periode': label_periode,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
         'stats': {
-            'nb_ordonnances_jour': ventes_jour.count(),
-            'nb_ventes_mois': ventes_mois.count(),
-            'nb_clients': ventes.values('client_telephone').exclude(
+            'nb_ventes_periode': ventes_periode.count(),
+            'nb_clients_periode': ventes_periode.values('client_telephone').exclude(
                 client_telephone__isnull=True
             ).exclude(client_telephone='').distinct().count(),
-            'nb_nouveaux_produits': medicaments.filter(
-                date_creation__date__gte=debut_mois
+            'nb_nouveaux_produits_periode': medicaments.filter(
+                date_creation__date__gte=date_debut,
+                date_creation__date__lte=date_fin,
             ).count(),
             'nb_medicaments': medicaments.count(),
             'nb_stocks': stocks.count(),
             'stock_faible': stock_faible,
-            'ca_jour_cdf': ca_jour['CDF'],
-            'ca_jour_usd': ca_jour['USD'],
-            'ca_hebdo_cdf': ca_semaine['CDF'],
-            'ca_hebdo_usd': ca_semaine['USD'],
-            'ca_mensuel_cdf': ca_mois['CDF'],
-            'ca_mensuel_usd': ca_mois['USD'],
-            'ca_annuel_cdf': ca_annee['CDF'],
-            'ca_annuel_usd': ca_annee['USD'],
+            'ca_periode_cdf': ca_periode['CDF'],
+            'ca_periode_usd': ca_periode['USD'],
         },
     }
     return render(request, 'back-end/dashboard/index.html', context)
-
 # ===================================================================================================
 # ===================================================================================================
 # Deconnexion
@@ -3687,3 +3723,166 @@ def changer_mot_de_passe(request):
         'roles': roles,
         'name_phar': name_phar,
     })
+
+
+# ************************************************************************************************************
+# CREATION DE DEPENSE 
+# ************************************************************************************************************
+def _pharmacies_accessibles(request):
+    """
+    Même logique de rôles que le dashboard : super admin voit tout,
+    admin/gestionnaire/visiteur voient seulement leurs pharmacies.
+    """
+    role_verify = (
+        Role.objects
+        .filter(userRole=request.user, statut='active')
+        .select_related('role', 'pharmacie')
+    )
+    roles_normalises = [
+        ur.role.nom_typeRole.lower().strip() for ur in role_verify if ur.role
+    ]
+ 
+    if 'super admin' in roles_normalises:
+        return Pharmacie.objects.all()
+ 
+    return Pharmacie.objects.filter(
+        Q(user_pharmacie=request.user) |
+        Q(roles__userRole=request.user, roles__statut='active')
+    ).distinct()
+
+# ----------------------------
+# ----------------------------
+# ----------------------------
+@login_required()
+def creer_depense(request):
+    pharmacies = _pharmacies_accessibles(request)
+
+    # Détermine la pharmacie concernée : passée en paramètre ou la seule accessible
+    pharmacie_id = request.POST.get('pharmacie') or request.GET.get('pharmacie')
+    if pharmacie_id:
+        pharmacie = get_object_or_404(pharmacies, pk=pharmacie_id)
+    else:
+        pharmacie = pharmacies.first()
+
+    if pharmacie is None:
+        messages.error(request, "Aucune pharmacie accessible pour enregistrer une dépense.")
+        return redirect('dashboard')
+
+    name_phar = pharmacie.nom_pharmacie
+    solde_actuel = Depense.solde_caisse_cdf(pharmacie)
+
+    if request.method == 'POST':
+        form = DepenseForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            # Création de l'instance sans l'enregistrer tout de suite en BDD
+            depense = form.save(commit=False)
+            
+            # Rattachement automatique de la pharmacie active et de l'utilisateur connecté
+            depense.pharmacie = pharmacie
+            depense.utilisateur = request.user
+
+            try:
+                # full_clean() déclenche la méthode clean() du modèle avec la pharmacie déjà attachée
+                depense.full_clean()
+                depense.save()
+            except ValidationError as erreur:
+                # Gestion propre des erreurs remontées par le modèle (solde insuffisant, etc.)
+                if hasattr(erreur, 'message_dict'):
+                    for champ, msgs in erreur.message_dict.items():
+                        for msg in msgs:
+                            form.add_error(champ if champ in form.fields else None, msg)
+                else:
+                    for msg in erreur.messages:
+                        form.add_error(None, msg)
+            else:
+                messages.success(
+                    request,
+                    f"Dépense de {depense.montant} {depense.devise} enregistrée. "
+                    f"Nouveau solde de caisse : {Depense.solde_caisse_cdf(pharmacie):.2f} CDF."
+                )
+                return redirect('liste_depenses')
+    else:
+        form = DepenseForm()
+
+    # Gestion des rôles utilisateur
+    role_verify = Role.objects.filter(userRole=request.user).select_related('role')
+    roles = [r.role.nom_typeRole for r in role_verify if r.role]
+
+    if 'super admin' in roles:
+        primary_role = 'super admin'
+    elif 'admin' in roles:
+        primary_role = 'admin'
+    else:
+        primary_role = 'visiteur'
+
+    context = {
+        'form': form,
+        'pharmacie': pharmacie,
+        'pharmacies': pharmacies,
+        'solde_actuel': solde_actuel,
+        'primary_role': primary_role,
+        'roles': roles,
+        'name_phar': name_phar,
+    }
+    return render(request, 'back-end/depenses/creer.html', context)
+ 
+# ----------------------------------------------------------------------------
+# LISTE DE DEPENSE
+# ----------------------------------------------------------------------------
+@login_required()
+def liste_depenses(request):
+    pharmacies = _pharmacies_accessibles(request)
+
+    pharmacie_id = request.GET.get('pharmacie')
+    if pharmacie_id:
+        pharmacies_filtrees = pharmacies.filter(pk=pharmacie_id)
+    else:
+        pharmacies_filtrees = pharmacies
+
+    depenses = (
+        Depense.objects
+        .filter(pharmacie__in=pharmacies_filtrees)
+        .select_related('pharmacie', 'utilisateur')
+    )
+
+    soldes_par_pharmacie = {
+        p.nom_pharmacie: Depense.solde_caisse_cdf(p)
+        for p in pharmacies_filtrees
+    }
+
+    # gestion de role (même pattern que le reste du fichier)
+    role_verify = (
+        Role.objects
+        .filter(userRole=request.user, statut='active')
+        .select_related('role', 'pharmacie')
+    )
+    roles = [ur.role.nom_typeRole for ur in role_verify if ur.role]
+    roles_normalises = [role.lower().strip() for role in roles]
+
+    if 'super admin' in roles_normalises:
+        primary_role = 'super admin'
+    elif 'admin' in roles_normalises:
+        primary_role = 'admin'
+    elif 'gestionnaire' in roles_normalises:
+        primary_role = 'gestionnaire'
+    else:
+        primary_role = 'visiteur'
+
+    pharmacie_noms = list(
+        pharmacies.order_by('nom_pharmacie').values_list('nom_pharmacie', flat=True)
+    )
+    if primary_role == 'super admin':
+        name_phar = 'Toutes les pharmacies'
+    else:
+        name_phar = ', '.join(pharmacie_noms) if pharmacie_noms else 'pas de nom'
+
+    context = {
+        'depenses': depenses,
+        'pharmacies': pharmacies,
+        'soldes_par_pharmacie': soldes_par_pharmacie,
+        'primary_role': primary_role,
+        'roles': roles,
+        'name_phar': name_phar,
+    }
+    return render(request, 'back-end/depenses/liste.html', context)

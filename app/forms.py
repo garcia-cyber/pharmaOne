@@ -771,3 +771,25 @@ RetourLigneVenteFormSet = formset_factory(
     RetourLigneVenteForm,
     extra=0
 )
+
+
+# *************************************************8
+# depense 
+
+class DepenseForm(forms.ModelForm):
+    class Meta:
+        model = Depense
+        fields = [
+            'categorie', 'motif', 'description',
+            'montant', 'devise'
+        ]
+        widgets = {
+            'categorie': forms.Select(attrs={'class': 'form-control'}),
+            'motif': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Facture électricité mars'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'montant': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'devise': forms.Select(attrs={'class': 'form-control'}),
+           
+        }
+ 
+ 

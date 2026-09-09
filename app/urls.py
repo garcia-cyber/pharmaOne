@@ -50,6 +50,11 @@ urlpatterns = [
     path("rapport_benefice/",rapport_benefice , name = "rapport_benefice"),   
     path("rapport_perte/",rapport_perte , name = "rapport_perte"),  
     path("rapport_financier/",rapport_financier , name = "rapport_financier"),   
+
+    # **************************************
+    # depense
+    path("creer_depense/",creer_depense , name = "creer_depense") ,
+    path("liste_depenses/", liste_depenses , name= "liste_depenses") , 
     
     
 ]

@@ -713,7 +713,7 @@
 
     .btn-action,
     .btn-action-primary,
-    .btn-action-reglement,
+    .btn-action-reglement, 
     .btn-action-retour-partiel,
     .btn-action-annuler {
       display: inline-flex;
@@ -1376,7 +1376,7 @@
                     {% endif %}
 
                     <!-- Bouton original : annulation totale -->
-                    {% if vente.statut != "ANNULEE" %}
+                    {% comment %} {% if vente.statut != "ANNULEE" %}
                       <form
                         method="post"
                         action="{% url 'annuler_vente' vente_id=vente.id %}"
@@ -1392,7 +1392,7 @@
                           Annuler la vente
                         </button>
                       </form>
-                    {% endif %}
+                    {% endif %} {% endcomment %}
 
                     <a
                       href="{% url 'creer_vente' %}"

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from decimal import Decimal, ROUND_HALF_UP
+from django.db import models, transaction
 
 # Create your models here.
 
@@ -1483,3 +1484,140 @@ class PaiementVente(models.Model):
         super().save(*args, **kwargs)
 
         self.vente.actualiser_statut()
+
+
+
+# ****************************************************************************8
+# depense
+ 
+
+
+# Pharmacie, TauxChange et PaiementVente sont déjà dans le même models.py
+# chez vous — pas d'import supplémentaire nécessaire, place juste cette
+# classe après PaiementVente dans le fichier.
+
+
+class Depense(models.Model):
+
+    class CategorieDepense(models.TextChoices):
+        LOYER = 'LOYER', 'Loyer'
+        SALAIRE = 'SALAIRE', 'Salaire'
+        ACHAT_FOURNITURE = 'ACHAT_FOURNITURE', 'Achat de fournitures'
+        TRANSPORT = 'TRANSPORT', 'Transport'
+        ENTRETIEN = 'ENTRETIEN', 'Entretien'
+        ELECTRICITE_EAU = 'ELECTRICITE_EAU', 'Électricité / Eau'
+        AUTRE = 'AUTRE', 'Autre'
+
+    class Devise(models.TextChoices):
+        CDF = 'CDF', 'Franc congolais'
+        USD = 'USD', 'Dollar américain'
+
+    pharmacie = models.ForeignKey(
+        Pharmacie, on_delete=models.CASCADE, related_name='depenses'
+    )
+    utilisateur = models.ForeignKey(
+        'auth.User', on_delete=models.PROTECT, related_name='depenses_enregistrees'
+    )
+    categorie = models.CharField(
+        max_length=30, choices=CategorieDepense.choices, default=CategorieDepense.AUTRE
+    )
+    motif = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    montant = models.DecimalField(max_digits=14, decimal_places=2)
+    devise = models.CharField(max_length=3, choices=Devise.choices, default=Devise.CDF)
+
+    taux_usd_cdf_applique = models.DecimalField(
+        max_digits=14, decimal_places=4, null=True, blank=True
+    )
+
+    justificatif = models.FileField(
+        upload_to='depenses/justificatifs/', null=True, blank=True
+    )
+    date_depense = models.DateTimeField(default=timezone.now)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_depense']
+
+    def __str__(self):
+        if self.pharmacie_id:
+            return f"{self.motif} - {self.montant} {self.devise} ({self.pharmacie})"
+        return f"{self.motif} - {self.montant} {self.devise} (Sans pharmacie)"
+
+    def montant_en_cdf(self):
+        if self.devise == self.Devise.USD:
+            taux = self.taux_usd_cdf_applique or Decimal('0')
+            return self.montant * taux
+        return self.montant
+
+    @staticmethod
+    def entrees_caisse_cdf(pharmacie):
+        total = Decimal('0')
+        taux_actif = TauxChange.objects.filter(
+            pharmacie=pharmacie, est_actif=True
+        ).first()
+
+        paiements = PaiementVente.objects.filter(vente__pharmacie=pharmacie)
+        for paiement in paiements:
+            if paiement.devise_paiement == 'USD':
+                taux = paiement.taux_usd_cdf_applique or (
+                    taux_actif.taux_usd_cdf if taux_actif else Decimal('0')
+                )
+                total += paiement.montant * taux
+            else:
+                total += paiement.montant
+        return total
+
+    @classmethod
+    def sorties_caisse_cdf(cls, pharmacie, exclure_pk=None):
+        qs = cls.objects.filter(pharmacie=pharmacie)
+        if exclure_pk:
+            qs = qs.exclude(pk=exclure_pk)
+        total = Decimal('0')
+        for depense in qs:
+            total += depense.montant_en_cdf()
+        return total
+
+    @classmethod
+    def solde_caisse_cdf(cls, pharmacie, exclure_pk=None):
+        return cls.entrees_caisse_cdf(pharmacie) - cls.sorties_caisse_cdf(pharmacie, exclure_pk)
+
+    def clean(self):
+        super().clean()
+
+        if self.montant is None or self.montant <= 0:
+            raise ValidationError("Le montant de la dépense doit être positif.")
+
+        if self.devise == self.Devise.USD and not self.taux_usd_cdf_applique:
+            raise ValidationError(
+                "Le taux CDF/USD doit être renseigné pour une dépense en USD."
+            )
+
+        # Sécurité : si la pharmacie n'est pas encore assignée lors d'une étape intermédiaire, on sort du clean
+        if not self.pharmacie_id:
+            return
+
+        solde_disponible = self.solde_caisse_cdf(self.pharmacie, exclure_pk=self.pk)
+        montant_demande = self.montant_en_cdf()
+
+        if montant_demande > solde_disponible:
+            raise ValidationError(
+                f"Solde de caisse insuffisant : disponible {solde_disponible:.2f} CDF, "
+                f"dépense demandée {montant_demande:.2f} CDF."
+            )
+
+    def save(self, *args, **kwargs):
+        if self.pharmacie_id:
+            if self.devise == self.Devise.USD and not self.taux_usd_cdf_applique:
+                taux_actif = TauxChange.objects.filter(
+                    pharmacie=self.pharmacie, est_actif=True
+                ).first()
+                if taux_actif:
+                    self.taux_usd_cdf_applique = taux_actif.taux_usd_cdf
+
+        with transaction.atomic():
+            if self.pharmacie_id:
+                Pharmacie.objects.select_for_update().get(pk=self.pharmacie_id)
+            
+            # On laisse la vue déclencher le full_clean() au bon moment
+            super().save(*args, **kwargs)
