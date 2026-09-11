@@ -13,6 +13,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "jmc-hopital.onrender.com",
+    "pharmaOne.onrender.com",
 ]
 
 INSTALLED_APPS = [
@@ -103,7 +104,7 @@ MEDIA_URL = "/media/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =============================================================================
-# CONFIGURATION STORAGES (Recommandé pour WhiteNoise sur Django récent)
+# CONFIGURATION STORAGES (Modifié pour éviter l'erreur des fichiers .map manquants)
 # =============================================================================
 
 STORAGES = {
@@ -111,7 +112,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.StaticFilesStorage",
     },
 }
 
@@ -142,6 +143,8 @@ if not DEBUG:
     
     # Trusted origins
     CSRF_TRUSTED_ORIGINS = [
+        "https://jmc-hopital.onrender.com",
+        "https://www.jmc-hopital.onrender.com",
         "https://pharmaOne.onrender.com",
         "https://www.pharmaOne.onrender.com",
     ]
