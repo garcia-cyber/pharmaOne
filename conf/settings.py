@@ -91,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "Africa/Kinshasa"
 USE_I18N = True
-USE_TZ = False
+USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
@@ -142,8 +142,8 @@ if not DEBUG:
     
     # Trusted origins
     CSRF_TRUSTED_ORIGINS = [
-        "https://jmc-hopital.onrender.com",
-        "https://www.jmc-hopital.onrender.com",
+        "https://pharmaOne.onrender.com",
+        "https://www.pharmaOne.onrender.com",
     ]
     
     # Proxy SSL header (pour Render/Heroku)
