@@ -64,12 +64,13 @@ TEMPLATES = [
 ]
 
 # =============================================================================
-# BASE DE DONNÉES (SQLite pour l'instant, prêt pour Neon/PostgreSQL)
+# BASE DE DONNÉES (Neon/PostgreSQL en prod, SQLite en local)
 # =============================================================================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
+    # Utilise PostgreSQL (Neon) si DATABASE_URL est défini
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
@@ -78,7 +79,7 @@ if DATABASE_URL:
         )
     }
 else:
-    # SQLite actif par défaut (en local et sur Render tant que DATABASE_URL n'est pas défini)
+    # Utilise SQLite par défaut en local si aucun DATABASE_URL n'est trouvé
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -103,7 +104,7 @@ MEDIA_URL = "/media/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =============================================================================
-# CONFIGURATION STORAGES (Modifié pour éviter l'erreur des fichiers .map manquants)
+# CONFIGURATION STORAGES
 # =============================================================================
 
 STORAGES = {
