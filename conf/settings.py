@@ -12,8 +12,7 @@ DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "jmc-hopital.onrender.com",
-    "pharmaOne.onrender.com",
+    "pharmaone-o6pa.onrender.com",
 ]
 
 INSTALLED_APPS = [
@@ -143,10 +142,8 @@ if not DEBUG:
     
     # Trusted origins
     CSRF_TRUSTED_ORIGINS = [
-        "https://jmc-hopital.onrender.com",
-        "https://www.jmc-hopital.onrender.com",
-        "https://pharmaOne.onrender.com",
-        "https://www.pharmaOne.onrender.com",
+        "https://pharmaone-o6pa.onrender.com",
+        "https://www.pharmaone-o6pa.onrender.com",
     ]
     
     # Proxy SSL header (pour Render/Heroku)
